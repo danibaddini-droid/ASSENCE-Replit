@@ -232,11 +232,10 @@ components:
         degree:
           type: ["number", "null"]
         retrograde:
-          type: boolean
+          type: ["boolean", "null"]
       required:
         - sign
         - house
-        - retrograde
 
     Aspect:
       type: object
@@ -298,14 +297,6 @@ components:
         - midheaven
         - sun
         - moon
-        - mercury
-        - venus
-        - mars
-        - jupiter
-        - saturn
-        - uranus
-        - neptune
-        - pluto
 
     CreateReadingBody:
       type: object

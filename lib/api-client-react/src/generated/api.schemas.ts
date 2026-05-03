@@ -18,7 +18,8 @@ export interface PlanetPosition {
   house: number;
   /** @nullable */
   degree?: number | null;
-  retrograde: boolean;
+  /** @nullable */
+  retrograde?: boolean | null;
 }
 
 export interface Aspect {
@@ -34,14 +35,14 @@ export interface BirthChart {
   midheaven: string;
   sun: PlanetPosition;
   moon: PlanetPosition;
-  mercury: PlanetPosition;
-  venus: PlanetPosition;
-  mars: PlanetPosition;
-  jupiter: PlanetPosition;
-  saturn: PlanetPosition;
-  uranus: PlanetPosition;
-  neptune: PlanetPosition;
-  pluto: PlanetPosition;
+  mercury?: PlanetPosition;
+  venus?: PlanetPosition;
+  mars?: PlanetPosition;
+  jupiter?: PlanetPosition;
+  saturn?: PlanetPosition;
+  uranus?: PlanetPosition;
+  neptune?: PlanetPosition;
+  pluto?: PlanetPosition;
   chiron?: PlanetPosition;
   lilith?: PlanetPosition;
   northNode?: PlanetPosition;

@@ -48,68 +48,84 @@ export const CreateReadingBody = zod.object({
       sign: zod.string(),
       house: zod.number(),
       degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
+      retrograde: zod.boolean().nullish(),
     }),
     moon: zod.object({
       sign: zod.string(),
       house: zod.number(),
       degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
+      retrograde: zod.boolean().nullish(),
     }),
-    mercury: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
-    }),
-    venus: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
-    }),
-    mars: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
-    }),
-    jupiter: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
-    }),
-    saturn: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
-    }),
-    uranus: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
-    }),
-    neptune: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
-    }),
-    pluto: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean(),
-    }),
+    mercury: zod
+      .object({
+        sign: zod.string(),
+        house: zod.number(),
+        degree: zod.number().nullish(),
+        retrograde: zod.boolean().nullish(),
+      })
+      .optional(),
+    venus: zod
+      .object({
+        sign: zod.string(),
+        house: zod.number(),
+        degree: zod.number().nullish(),
+        retrograde: zod.boolean().nullish(),
+      })
+      .optional(),
+    mars: zod
+      .object({
+        sign: zod.string(),
+        house: zod.number(),
+        degree: zod.number().nullish(),
+        retrograde: zod.boolean().nullish(),
+      })
+      .optional(),
+    jupiter: zod
+      .object({
+        sign: zod.string(),
+        house: zod.number(),
+        degree: zod.number().nullish(),
+        retrograde: zod.boolean().nullish(),
+      })
+      .optional(),
+    saturn: zod
+      .object({
+        sign: zod.string(),
+        house: zod.number(),
+        degree: zod.number().nullish(),
+        retrograde: zod.boolean().nullish(),
+      })
+      .optional(),
+    uranus: zod
+      .object({
+        sign: zod.string(),
+        house: zod.number(),
+        degree: zod.number().nullish(),
+        retrograde: zod.boolean().nullish(),
+      })
+      .optional(),
+    neptune: zod
+      .object({
+        sign: zod.string(),
+        house: zod.number(),
+        degree: zod.number().nullish(),
+        retrograde: zod.boolean().nullish(),
+      })
+      .optional(),
+    pluto: zod
+      .object({
+        sign: zod.string(),
+        house: zod.number(),
+        degree: zod.number().nullish(),
+        retrograde: zod.boolean().nullish(),
+      })
+      .optional(),
     chiron: zod
       .object({
         sign: zod.string(),
         house: zod.number(),
         degree: zod.number().nullish(),
-        retrograde: zod.boolean(),
+        retrograde: zod.boolean().nullish(),
       })
       .optional(),
     lilith: zod
@@ -117,7 +133,7 @@ export const CreateReadingBody = zod.object({
         sign: zod.string(),
         house: zod.number(),
         degree: zod.number().nullish(),
-        retrograde: zod.boolean(),
+        retrograde: zod.boolean().nullish(),
       })
       .optional(),
     northNode: zod
@@ -125,7 +141,7 @@ export const CreateReadingBody = zod.object({
         sign: zod.string(),
         house: zod.number(),
         degree: zod.number().nullish(),
-        retrograde: zod.boolean(),
+        retrograde: zod.boolean().nullish(),
       })
       .optional(),
     southNode: zod
@@ -133,7 +149,7 @@ export const CreateReadingBody = zod.object({
         sign: zod.string(),
         house: zod.number(),
         degree: zod.number().nullish(),
-        retrograde: zod.boolean(),
+        retrograde: zod.boolean().nullish(),
       })
       .optional(),
     aspects: zod

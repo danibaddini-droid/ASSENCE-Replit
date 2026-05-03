@@ -11,5 +11,6 @@ export interface PlanetPosition {
   house: number;
   /** @nullable */
   degree?: number | null;
-  retrograde: boolean;
+  /** @nullable */
+  retrograde?: boolean | null;
 }
