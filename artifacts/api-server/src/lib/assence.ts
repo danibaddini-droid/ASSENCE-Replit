@@ -173,8 +173,20 @@ export function buildChartPrompt(data: {
   birthTime?: string | null;
   birthPlace: string;
   clientAge?: number | null;
-  birthChart: unknown;
+  autoCalculate?: boolean | null;
+  birthChart?: unknown;
 }): string {
+  if (data.autoCalculate) {
+    return `Por favor, realize a análise astrológica completa seguindo o método Assence para:
+
+Nome: ${data.clientName}
+Data de Nascimento: ${data.birthDate}
+Hora de Nascimento: ${data.birthTime ?? "Não informada"}
+Local de Nascimento: ${data.birthPlace}
+${data.clientAge != null ? `Idade: ${data.clientAge} anos` : ""}
+
+Com base nestes dados de nascimento, calcule as posições planetárias aproximadas (Sol, Lua, Mercúrio, Vênus, Marte, Júpiter, Saturno, Urano, Netuno, Plutão, Quíron, Nodo Norte/Sul, Lilith) para esta data, hora e local, identificando o Ascendente e Meio-do-Céu. Em seguida, realize a análise completa conforme as diretrizes do método Assence, seguindo a estrutura obrigatória com todos os combos de entrega para cada posição.`;
+  }
   const chart = data.birthChart as BirthChart;
 
   const formatPlanet = (name: string, p: PlanetPosition) =>

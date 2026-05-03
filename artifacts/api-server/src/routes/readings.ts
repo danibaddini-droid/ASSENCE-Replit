@@ -101,7 +101,8 @@ async function generateAnalysis(
     birthTime?: string | null;
     birthPlace: string;
     clientAge?: number | null;
-    birthChart: unknown;
+    autoCalculate?: boolean | null;
+    birthChart?: unknown;
   }
 ) {
   try {

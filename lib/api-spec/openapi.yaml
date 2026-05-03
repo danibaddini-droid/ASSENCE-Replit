@@ -330,6 +330,8 @@ components:
           type: string
         birthChart:
           $ref: "#/components/schemas/BirthChart"
+        autoCalculate:
+          type: boolean
         clientAge:
           type: ["integer", "null"]
         notes:
@@ -338,7 +340,6 @@ components:
         - clientName
         - birthDate
         - birthPlace
-        - birthChart
 
     Reading:
       type: object

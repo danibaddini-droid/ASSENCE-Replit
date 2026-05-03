@@ -56,7 +56,7 @@ export default function Readings() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif text-primary mb-1">Mapas Natais</h1>
+          <h1 className="text-3xl font-serif mb-1 text-[#25f4e3]">Mapas Natais</h1>
           <p className="text-muted-foreground">
             {isLoading ? "Carregando…" : `${readings?.length ?? 0} mapa${readings?.length !== 1 ? "s" : ""} cadastrado${readings?.length !== 1 ? "s" : ""}`}
           </p>
@@ -68,7 +68,6 @@ export default function Readings() {
           </Button>
         </Link>
       </div>
-
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
@@ -78,7 +77,6 @@ export default function Readings() {
           className="pl-9 bg-card/50 border-border/50"
         />
       </div>
-
       {isLoading ? (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
