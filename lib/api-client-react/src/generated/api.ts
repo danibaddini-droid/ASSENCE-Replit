@@ -26,6 +26,7 @@ import type {
   Reading,
   ReadingsStats,
   SendOpenaiMessageBody,
+  UpdateReadingBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -359,6 +360,93 @@ export function useGetReading<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Update notes on a reading
+ */
+export const getUpdateReadingUrl = (id: number) => {
+  return `/api/readings/${id}`;
+};
+
+export const updateReading = async (
+  id: number,
+  updateReadingBody: UpdateReadingBody,
+  options?: RequestInit,
+): Promise<Reading> => {
+  return customFetch<Reading>(getUpdateReadingUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateReadingBody),
+  });
+};
+
+export const getUpdateReadingMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateReading>>,
+    TError,
+    { id: number; data: BodyType<UpdateReadingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateReading>>,
+  TError,
+  { id: number; data: BodyType<UpdateReadingBody> },
+  TContext
+> => {
+  const mutationKey = ["updateReading"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateReading>>,
+    { id: number; data: BodyType<UpdateReadingBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateReading(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateReadingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateReading>>
+>;
+export type UpdateReadingMutationBody = BodyType<UpdateReadingBody>;
+export type UpdateReadingMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Update notes on a reading
+ */
+export const useUpdateReading = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateReading>>,
+    TError,
+    { id: number; data: BodyType<UpdateReadingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateReading>>,
+  TError,
+  { id: number; data: BodyType<UpdateReadingBody> },
+  TContext
+> => {
+  return useMutation(getUpdateReadingMutationOptions(options));
+};
 
 /**
  * @summary Delete a reading

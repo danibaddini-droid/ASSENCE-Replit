@@ -203,6 +203,32 @@ export const GetReadingResponse = zod.object({
 });
 
 /**
+ * @summary Update notes on a reading
+ */
+export const UpdateReadingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateReadingBody = zod.object({
+  notes: zod.string().nullish(),
+});
+
+export const UpdateReadingResponse = zod.object({
+  id: zod.number(),
+  clientName: zod.string(),
+  birthDate: zod.string(),
+  birthTime: zod.string().nullish(),
+  birthPlace: zod.string(),
+  birthChart: zod.object({}).passthrough(),
+  analysis: zod.string().nullish(),
+  analysisStatus: zod.string(),
+  clientAge: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
  * @summary Delete a reading
  */
 export const DeleteReadingParams = zod.object({

@@ -3,6 +3,7 @@ import { eq, desc, sql } from "drizzle-orm";
 import { db, readingsTable } from "@workspace/db";
 import {
   CreateReadingBody,
+  UpdateReadingBody,
   GetReadingParams,
   DeleteReadingParams,
   ListReadingsResponse,
@@ -177,6 +178,25 @@ router.get("/readings/:id", async (req, res): Promise<void> => {
   }
 
   res.json(GetReadingResponse.parse(serializeDates(reading)));
+});
+
+router.patch("/readings/:id", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
+
+  const parsed = UpdateReadingBody.safeParse(req.body);
+  if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
+
+  const [updated] = await db
+    .update(readingsTable)
+    .set({ notes: parsed.data.notes ?? null, updatedAt: new Date() })
+    .where(eq(readingsTable.id, id))
+    .returning();
+
+  if (!updated) { res.status(404).json({ error: "Reading not found" }); return; }
+
+  res.json(GetReadingResponse.parse(serializeDates(updated)));
 });
 
 router.delete("/readings/:id", async (req, res): Promise<void> => {

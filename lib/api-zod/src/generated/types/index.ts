@@ -21,3 +21,4 @@ export * from "./reading";
 export * from "./readingBirthChart";
 export * from "./readingsStats";
 export * from "./sendOpenaiMessageBody";
+export * from "./updateReadingBody";

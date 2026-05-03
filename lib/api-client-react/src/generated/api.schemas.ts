@@ -58,6 +58,11 @@ export interface BirthChart {
   aspects?: Aspect[];
 }
 
+export interface UpdateReadingBody {
+  /** @nullable */
+  notes?: string | null;
+}
+
 export interface CreateReadingBody {
   clientName: string;
   birthDate: string;

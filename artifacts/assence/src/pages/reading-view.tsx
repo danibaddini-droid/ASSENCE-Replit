@@ -4,6 +4,7 @@ import {
   useGetReading,
   getGetReadingQueryKey,
   useCreateConversation,
+  useUpdateReading,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download } from "lucide-react";
+import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download, NotebookPen, Save } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { PLANETS } from "@/lib/constants";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -48,7 +50,11 @@ export default function ReadingView() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const createConversation = useCreateConversation();
+  const updateReading = useUpdateReading();
   const [exporting, setExporting] = useState(false);
+  const [notes, setNotes] = useState<string>("");
+  const [notesDirty, setNotesDirty] = useState(false);
+  const [savingNotes, setSavingNotes] = useState(false);
 
   const { data: reading, isLoading } = useGetReading(readingId, {
     query: {
@@ -61,6 +67,28 @@ export default function ReadingView() {
       },
     },
   });
+
+  useEffect(() => {
+    if (reading?.notes !== undefined) {
+      setNotes(reading.notes ?? "");
+      setNotesDirty(false);
+    }
+  }, [reading?.notes]);
+
+  async function handleSaveNotes() {
+    if (!reading) return;
+    setSavingNotes(true);
+    try {
+      await updateReading.mutateAsync({ id: reading.id, data: { notes: notes || null } });
+      await queryClient.invalidateQueries({ queryKey: getGetReadingQueryKey(readingId) });
+      setNotesDirty(false);
+      toast({ title: "Notas salvas" });
+    } catch {
+      toast({ title: "Erro ao salvar notas", variant: "destructive" });
+    } finally {
+      setSavingNotes(false);
+    }
+  }
 
   async function handleStartChat() {
     if (!reading) return;
@@ -270,6 +298,46 @@ export default function ReadingView() {
               <p>Análise não disponível.</p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="border-b border-border/50">
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle className="font-sans text-xl flex items-center gap-2">
+              <NotebookPen className="h-5 w-5 text-primary" />
+              Notas do Cliente
+            </CardTitle>
+            {notesDirty && (
+              <Button
+                size="sm"
+                onClick={handleSaveNotes}
+                disabled={savingNotes}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3"
+              >
+                {savingNotes ? (
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                ) : (
+                  <Save className="h-3.5 w-3.5 mr-1.5" />
+                )}
+                {savingNotes ? "Salvando…" : "Salvar"}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-5">
+          <Textarea
+            value={notes}
+            onChange={(e) => { setNotes(e.target.value); setNotesDirty(true); }}
+            placeholder="Adicione observações sobre o cliente, contexto de vida, pontos importantes da consulta…"
+            className="min-h-[120px] resize-y bg-background/50 border-border/50 focus:border-primary/50 text-sm leading-relaxed placeholder:text-muted-foreground/50"
+          />
+          <p className="text-xs text-muted-foreground mt-2">
+            {notes.length > 0
+              ? `${notes.length} caracteres • `
+              : ""}
+            {notesDirty ? "Alterações não salvas" : reading?.notes ? "Salvo" : "Nenhuma nota"}
+          </p>
         </CardContent>
       </Card>
     </div>
