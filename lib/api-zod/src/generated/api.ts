@@ -178,6 +178,12 @@ export const CreateReadingBody = zod.object({
   autoCalculate: zod.boolean().optional(),
   clientAge: zod.number().nullish(),
   notes: zod.string().nullish(),
+  timezoneOverride: zod
+    .string()
+    .nullish()
+    .describe(
+      'IANA timezone name (e.g. \"UTC\", \"America\/New_York\"). If null, auto-detected from birth place coordinates.',
+    ),
 });
 
 /**

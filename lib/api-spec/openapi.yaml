@@ -371,6 +371,9 @@ components:
           type: ["integer", "null"]
         notes:
           type: ["string", "null"]
+        timezoneOverride:
+          type: ["string", "null"]
+          description: IANA timezone name (e.g. "UTC", "America/New_York"). If null, auto-detected from birth place coordinates.
       required:
         - clientName
         - birthDate

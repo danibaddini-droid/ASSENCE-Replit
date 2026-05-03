@@ -334,11 +334,17 @@ function localToUT(
   birthDate: string,
   birthTime: string | null | undefined,
   lat: number,
-  lon: number
+  lon: number,
+  timezoneOverride?: string | null
 ): { yr: number; mo: number; dy: number; hrUT: number; mnUT: number; tzName: string; utcOffsetMin: number } {
   const timePart = birthTime ?? "12:00";
-  const timezones = geoTzFind(lat, lon);
-  const tzName = timezones[0] ?? "UTC";
+  let tzName: string;
+  if (timezoneOverride && timezoneOverride.trim().length > 0) {
+    tzName = timezoneOverride.trim();
+  } else {
+    const timezones = geoTzFind(lat, lon);
+    tzName = timezones[0] ?? "UTC";
+  }
 
   const dt = DateTime.fromISO(`${birthDate}T${timePart}:00`, { zone: tzName });
   const utc = dt.toUTC();
@@ -356,12 +362,13 @@ function localToUT(
 export async function calculateBirthChart(
   birthDate: string,
   birthTime: string | null | undefined,
-  birthPlace: string
+  birthPlace: string,
+  timezoneOverride?: string | null
 ): Promise<Record<string, unknown>> {
   const coords = await geocode(birthPlace);
   const { lat, lon } = coords;
 
-  const { yr, mo, dy, hrUT, mnUT, tzName, utcOffsetMin } = localToUT(birthDate, birthTime, lat, lon);
+  const { yr, mo, dy, hrUT, mnUT, tzName, utcOffsetMin } = localToUT(birthDate, birthTime, lat, lon, timezoneOverride);
 
   const jd = toJD(yr, mo, dy, hrUT, mnUT);
   const eps = obliquity(jd);

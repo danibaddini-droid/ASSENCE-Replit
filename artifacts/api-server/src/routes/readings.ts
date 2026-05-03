@@ -82,7 +82,8 @@ router.post("/readings", async (req, res): Promise<void> => {
       const calculated = await calculateBirthChart(
         parsed.data.birthDate,
         parsed.data.birthTime ?? null,
-        parsed.data.birthPlace
+        parsed.data.birthPlace,
+        parsed.data.timezoneOverride ?? null
       );
       birthChart = calculated;
       autoCalculate = false;

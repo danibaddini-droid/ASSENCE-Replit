@@ -19,4 +19,9 @@ export interface CreateReadingBody {
   clientAge?: number | null;
   /** @nullable */
   notes?: string | null;
+  /**
+   * IANA timezone name (e.g. "UTC", "America/New_York"). If null, auto-detected from birth place coordinates.
+   * @nullable
+   */
+  timezoneOverride?: string | null;
 }
