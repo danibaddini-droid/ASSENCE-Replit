@@ -213,7 +213,7 @@ function placidusHouseCusps(
 
   function computeRA(lonDeg: number): number {
     const l = lonDeg * D2R;
-    return Math.atan2(Math.sin(l) * Math.cos(epsR), Math.cos(l)) * R2D;
+    return norm(Math.atan2(Math.sin(l) * Math.cos(epsR), Math.cos(l)) * R2D);
   }
 
   function computeDSA(lonDeg: number): number {
@@ -225,10 +225,14 @@ function placidusHouseCusps(
     return Math.acos(-t) * R2D;
   }
 
+  // Placidus solver: find ecliptic lon s.t. RA(lon) - k*DSA(lon) = C
+  // H11/H12 (above horizon): C = RAMC + 0;  k = 1/3, 2/3
+  // H2/H3   (below horizon): C = RAMC + 60, RAMC + 120; k = 2/3, 1/3
+  // (below-horizon formula derived from IC trisection going toward ASC)
   function solve(k: number, C: number): number {
     let lon = norm(C + k * 90);
     for (let i = 0; i < 100; i++) {
-      const ra = computeRA(lon);
+      const ra  = computeRA(lon);
       const dsa = computeDSA(lon);
       const residual = norm(ra - k * dsa - C + 180) - 180;
       if (Math.abs(residual) < 1e-7) break;
