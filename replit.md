@@ -69,4 +69,12 @@ Elite Portuguese-language astrological intelligence platform. Generates rich psy
 - `GET /api/openai/conversations/:id` — get conversation with messages
 - `POST /api/openai/conversations/:id/messages` — send message (SSE stream)
 
+## Email Notifications (PENDING)
+
+- Integration: Resend (resend.com) — needs API key in secret `RESEND_API_KEY`
+- Also needs: `NOTIFICATION_EMAIL` secret (the astrologer's email address to receive notifications)
+- Microsoft Outlook and Resend OAuth integrations were dismissed — use direct API key instead
+- When key is available: implement `lib/email/` module and call it from `POST /api/readings` after reading is created
+- Notification trigger: new client form submission (`/solicitar`) → email to astrologer with client name, birth date/place, and email
+
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

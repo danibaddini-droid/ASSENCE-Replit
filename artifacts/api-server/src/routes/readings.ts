@@ -14,6 +14,7 @@ import {
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { ASSENCE_SYSTEM_PROMPT, buildChartPrompt } from "../lib/assence";
 import { calculateBirthChart } from "../lib/ephemeris";
+import { sendNewClientNotification } from "../lib/email";
 
 const router: IRouter = Router();
 
@@ -114,6 +115,17 @@ router.post("/readings", async (req, res): Promise<void> => {
 
   generateAnalysis(reading.id, { ...parsed.data, birthChart, autoCalculate, ephemerisCalculated }).catch((err) => {
     req.log.error({ err, readingId: reading.id }, "Failed to generate analysis");
+  });
+
+  sendNewClientNotification({
+    clientName: reading.clientName,
+    birthDate: reading.birthDate,
+    birthTime: reading.birthTime,
+    birthPlace: reading.birthPlace,
+    clientEmail: reading.clientEmail,
+    readingId: reading.id,
+  }).catch((err) => {
+    req.log.warn({ err }, "Failed to send notification email");
   });
 });
 
