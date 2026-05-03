@@ -197,6 +197,81 @@ function calcMC(ramc: number, eps: number): number {
   return norm(Math.atan2(Math.sin(r), Math.cos(r) * Math.cos(e)) * R2D);
 }
 
+function placidusHouseCusps(
+  ramc: number,
+  eps: number,
+  lat: number,
+  ascLon: number,
+  mcLon: number
+): number[] {
+  const epsR = eps * D2R;
+  const phiR = lat * D2R;
+
+  if (Math.abs(lat) > 66) {
+    return Array.from({ length: 12 }, (_, i) => norm(ascLon + i * 30));
+  }
+
+  function computeRA(lonDeg: number): number {
+    const l = lonDeg * D2R;
+    return Math.atan2(Math.sin(l) * Math.cos(epsR), Math.cos(l)) * R2D;
+  }
+
+  function computeDSA(lonDeg: number): number {
+    const l = lonDeg * D2R;
+    const dec = Math.asin(Math.sin(l) * Math.sin(epsR));
+    const t = Math.tan(dec) * Math.tan(phiR);
+    if (t <= -1) return 180;
+    if (t >= 1) return 0;
+    return Math.acos(-t) * R2D;
+  }
+
+  function solve(k: number, C: number): number {
+    let lon = norm(C + k * 90);
+    for (let i = 0; i < 100; i++) {
+      const ra = computeRA(lon);
+      const dsa = computeDSA(lon);
+      const residual = norm(ra - k * dsa - C + 180) - 180;
+      if (Math.abs(residual) < 1e-7) break;
+      lon = norm(lon - residual);
+    }
+    return lon;
+  }
+
+  const h11 = solve(1 / 3, ramc);
+  const h12 = solve(2 / 3, ramc);
+  const h2  = solve(2 / 3, norm(ramc + 60));
+  const h3  = solve(1 / 3, norm(ramc + 120));
+
+  const icLon   = norm(mcLon  + 180);
+  const descLon = norm(ascLon + 180);
+
+  return [
+    ascLon,          // H1
+    h2,              // H2
+    h3,              // H3
+    icLon,           // H4
+    norm(h11 + 180), // H5
+    norm(h12 + 180), // H6
+    descLon,         // H7
+    norm(h2  + 180), // H8
+    norm(h3  + 180), // H9
+    mcLon,           // H10
+    h11,             // H11
+    h12,             // H12
+  ];
+}
+
+function findHouse(lon: number, cusps: number[]): number {
+  for (let i = 0; i < 12; i++) {
+    const c1 = cusps[i];
+    const c2 = cusps[(i + 1) % 12];
+    const span = norm(c2 - c1);
+    const d    = norm(lon - c1);
+    if (d < span) return i + 1;
+  }
+  return 1;
+}
+
 function retrograde(fn: (j: number) => number, jd: number): boolean {
   let d = fn(jd + 0.5) - fn(jd - 0.5);
   if (d > 180) d -= 360;
@@ -224,14 +299,11 @@ export async function calculateBirthChart(
   const ramc = norm(gmstDeg(jd) + lon);
   const ascLon = calcAsc(ramc, eps, lat);
   const mcLon  = calcMC(ramc, eps);
-
-  function house(eclLon: number): number {
-    return Math.floor(norm(eclLon - ascLon) / 30) + 1;
-  }
+  const cusps  = placidusHouseCusps(ramc, eps, lat, ascLon, mcLon);
 
   function planet(lon: number, rx = false) {
     const { sign, degree } = signOf(lon);
-    return { sign, house: house(lon), degree, retrograde: rx };
+    return { sign, house: findHouse(lon, cusps), degree, retrograde: rx };
   }
 
   const sLon   = sunLon(jd);
@@ -251,8 +323,7 @@ export async function calculateBirthChart(
   const { sign: ascSign, degree: ascDeg } = signOf(ascLon);
   const { sign: mcSign }                  = signOf(mcLon);
 
-  const houseCusps = Array.from({ length: 12 }, (_, i) => {
-    const cl = norm(ascLon + i * 30);
+  const houseCusps = cusps.map((cl, i) => {
     const { sign: cs, degree: cd } = signOf(cl);
     return { house: i + 1, sign: cs, degrees: Math.floor(cd), minutes: Math.round((cd % 1) * 60) };
   });

@@ -226,7 +226,7 @@ Hora de Nascimento: ${data.birthTime ?? "Não informada"}
 Local de Nascimento: ${data.birthPlace}
 ${data.clientAge != null ? `Idade: ${data.clientAge} anos` : ""}
 
-POSIÇÕES PLANETÁRIAS${data.ephemerisCalculated ? " (calculadas via efemérides astronômicas, sistema de casas iguais)" : ""}:
+POSIÇÕES PLANETÁRIAS${data.ephemerisCalculated ? " (calculadas via efemérides astronômicas, sistema de casas Placidus)" : ""}:
 ${planetLines.join("\n")}
 ${aspectLines}
 
