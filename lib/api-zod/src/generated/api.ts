@@ -273,6 +273,28 @@ export const RecalculateReadingResponse = zod.object({
 });
 
 /**
+ * @summary Regenerate AI analysis for an existing reading
+ */
+export const RegenerateReadingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RegenerateReadingResponse = zod.object({
+  id: zod.number(),
+  clientName: zod.string(),
+  birthDate: zod.string(),
+  birthTime: zod.string().nullish(),
+  birthPlace: zod.string(),
+  birthChart: zod.object({}).passthrough(),
+  analysis: zod.string().nullish(),
+  analysisStatus: zod.string(),
+  clientAge: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
  * @summary Get statistics about readings
  */
 export const GetReadingsStatsResponse = zod.object({

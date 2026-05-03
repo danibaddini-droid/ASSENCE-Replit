@@ -6,6 +6,7 @@ import {
   useCreateConversation,
   useUpdateReading,
   useRecalculateReading,
+  useRegenerateReading,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,7 +85,9 @@ export default function ReadingView() {
   const createConversation = useCreateConversation();
   const updateReading = useUpdateReading();
   const recalculateReading = useRecalculateReading();
+  const regenerateReading = useRegenerateReading();
   const [exporting, setExporting] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
   const [notes, setNotes] = useState<string>("");
   const [notesDirty, setNotesDirty] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
@@ -151,6 +154,20 @@ export default function ReadingView() {
       toast({ title: "Erro ao exportar PDF", variant: "destructive" });
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function handleRegenerate() {
+    if (!reading) return;
+    setRegenerating(true);
+    try {
+      await regenerateReading.mutateAsync({ id: reading.id });
+      await queryClient.invalidateQueries({ queryKey: getGetReadingQueryKey(readingId) });
+      toast({ title: "Análise em geração", description: "A IA está gerando uma nova análise com as posições atuais." });
+    } catch {
+      toast({ title: "Erro ao regerar análise", variant: "destructive" });
+    } finally {
+      setRegenerating(false);
     }
   }
 
@@ -240,6 +257,21 @@ export default function ReadingView() {
           >
             <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
             Recalcular Mapa
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRegenerate}
+            disabled={regenerating || reading.analysisStatus === "generating"}
+            className="text-muted-foreground hover:text-foreground border border-border/40 hover:border-border/70 h-8 px-2.5 text-xs"
+            title="Regerar análise da IA com as posições atuais"
+          >
+            {regenerating || reading.analysisStatus === "generating" ? (
+              <Sparkles className="h-3.5 w-3.5 mr-1.5 animate-pulse" />
+            ) : (
+              <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+            )}
+            {regenerating || reading.analysisStatus === "generating" ? "Gerando…" : "Regerar Análise"}
           </Button>
           {reading.analysisStatus === "completed" && (
             <>

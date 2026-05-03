@@ -169,6 +169,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /readings/{id}/regenerate:
+    post:
+      operationId: regenerateReading
+      tags: [readings]
+      summary: Regenerate AI analysis for an existing reading
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated reading with new analysis
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reading"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /readings/stats:
     get:
       operationId: getReadingsStats

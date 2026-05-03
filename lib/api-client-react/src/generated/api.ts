@@ -621,6 +621,90 @@ export const useRecalculateReading = <
 };
 
 /**
+ * @summary Regenerate AI analysis for an existing reading
+ */
+export const getRegenerateReadingUrl = (id: number) => {
+  return `/api/readings/${id}/regenerate`;
+};
+
+export const regenerateReading = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Reading> => {
+  return customFetch<Reading>(getRegenerateReadingUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRegenerateReadingMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof regenerateReading>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof regenerateReading>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["regenerateReading"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof regenerateReading>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return regenerateReading(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RegenerateReadingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof regenerateReading>>
+>;
+
+export type RegenerateReadingMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Regenerate AI analysis for an existing reading
+ */
+export const useRegenerateReading = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof regenerateReading>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof regenerateReading>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getRegenerateReadingMutationOptions(options));
+};
+
+/**
  * @summary Get statistics about readings
  */
 export const getGetReadingsStatsUrl = () => {

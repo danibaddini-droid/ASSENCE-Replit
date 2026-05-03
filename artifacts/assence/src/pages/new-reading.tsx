@@ -126,7 +126,6 @@ export default function NewReading() {
   const [birthDate, setBirthDate] = useState("");
   const [birthTime, setBirthTime] = useState("");
   const [birthPlace, setBirthPlace] = useState("");
-  const [clientAge, setClientAge] = useState("");
   const [timezoneOverride, setTimezoneOverride] = useState(TZ_AUTO);
 
   const [ascendant, setAscendant] = useState("Áries");
@@ -180,7 +179,6 @@ export default function NewReading() {
             birthDate,
             birthTime: birthTime || undefined,
             birthPlace,
-            clientAge: clientAge ? parseInt(clientAge) : undefined,
             autoCalculate: true,
             timezoneOverride: timezoneOverride && timezoneOverride !== TZ_AUTO ? timezoneOverride : null,
           },
@@ -194,7 +192,6 @@ export default function NewReading() {
             birthDate,
             birthTime: birthTime || undefined,
             birthPlace,
-            clientAge: clientAge ? parseInt(clientAge) : undefined,
             birthChart: {
               ascendant,
               midheaven,
@@ -299,11 +296,6 @@ export default function NewReading() {
             <Label htmlFor="birthPlace">Local de nascimento *</Label>
             <Input id="birthPlace" value={birthPlace} onChange={(e) => setBirthPlace(e.target.value)}
               placeholder="São Paulo, SP, Brasil" className="bg-background/50" required />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="clientAge">Idade</Label>
-            <Input id="clientAge" type="number" min={1} max={120} value={clientAge}
-              onChange={(e) => setClientAge(e.target.value)} placeholder="35" className="bg-background/50" />
           </div>
           {mode === "auto" && (
             <div className="md:col-span-2 space-y-1.5">

@@ -201,6 +201,29 @@ router.patch("/readings/:id", async (req, res): Promise<void> => {
   res.json(GetReadingResponse.parse(serializeDates(updated)));
 });
 
+router.post("/readings/:id/regenerate", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
+
+  const [reading] = await db.select().from(readingsTable).where(eq(readingsTable.id, id));
+  if (!reading) { res.status(404).json({ error: "Reading not found" }); return; }
+
+  res.json(GetReadingResponse.parse(serializeDates(reading)));
+
+  generateAnalysis(reading.id, {
+    clientName: reading.clientName,
+    birthDate: reading.birthDate,
+    birthTime: reading.birthTime,
+    birthPlace: reading.birthPlace,
+    clientAge: reading.clientAge,
+    birthChart: reading.birthChart,
+    ephemerisCalculated: !!(reading.birthChart as Record<string, unknown>)?.ascendant,
+  }).catch((err) => {
+    req.log.error({ err, readingId: reading.id }, "Failed to regenerate analysis");
+  });
+});
+
 router.post("/readings/:id/recalculate", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
   const id = parseInt(raw, 10);
