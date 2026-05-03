@@ -279,6 +279,50 @@ function retrograde(fn: (j: number) => number, jd: number): boolean {
   return d < 0;
 }
 
+const LUMINARIES = new Set(["Sol", "Lua"]);
+
+const ASPECT_DEFS = [
+  { type: "Conjunção",  angle: 0,   orbDefault: 10, orbLuminary: 12 },
+  { type: "Oposição",   angle: 180, orbDefault: 10, orbLuminary: 12 },
+  { type: "Trígono",    angle: 120, orbDefault: 8,  orbLuminary: 8  },
+  { type: "Quadratura", angle: 90,  orbDefault: 8,  orbLuminary: 8  },
+  { type: "Sextil",     angle: 60,  orbDefault: 6,  orbLuminary: 6  },
+];
+
+function calculateAspects(
+  planets: Array<{ name: string; lon: number }>
+): Array<{ planet1: string; planet2: string; type: string; orb: number }> {
+  const aspects: Array<{ planet1: string; planet2: string; type: string; orb: number }> = [];
+
+  for (let i = 0; i < planets.length; i++) {
+    for (let j = i + 1; j < planets.length; j++) {
+      const p1 = planets[i];
+      const p2 = planets[j];
+
+      let sep = norm(p1.lon - p2.lon);
+      if (sep > 180) sep = 360 - sep;
+
+      const isLuminary = LUMINARIES.has(p1.name) || LUMINARIES.has(p2.name);
+
+      for (const def of ASPECT_DEFS) {
+        const maxOrb = isLuminary ? def.orbLuminary : def.orbDefault;
+        const diff = Math.abs(sep - def.angle);
+        if (diff <= maxOrb) {
+          aspects.push({
+            planet1: p1.name,
+            planet2: p2.name,
+            type: def.type,
+            orb: Math.round(diff * 10) / 10,
+          });
+          break;
+        }
+      }
+    }
+  }
+
+  return aspects;
+}
+
 export async function calculateBirthChart(
   birthDate: string,
   birthTime: string | null | undefined,
@@ -328,6 +372,21 @@ export async function calculateBirthChart(
     return { house: i + 1, sign: cs, degrees: Math.floor(cd), minutes: Math.round((cd % 1) * 60) };
   });
 
+  const aspects = calculateAspects([
+    { name: "Sol",        lon: sLon   },
+    { name: "Lua",        lon: mLon   },
+    { name: "Mercúrio",   lon: merLon },
+    { name: "Vênus",      lon: venLon },
+    { name: "Marte",      lon: marLon },
+    { name: "Júpiter",    lon: jupLon },
+    { name: "Saturno",    lon: satLon },
+    { name: "Urano",      lon: uraLon },
+    { name: "Netuno",     lon: nepLon },
+    { name: "Plutão",     lon: pluLon },
+    { name: "Nodo Norte", lon: nnLon  },
+    { name: "Lilith",     lon: lilLon },
+  ]);
+
   return {
     ascendant: ascSign,
     ascendantDegree: Math.floor(ascDeg),
@@ -347,6 +406,7 @@ export async function calculateBirthChart(
     southNode: planet(snLon),
     lilith:   planet(lilLon),
     houseCusps,
+    aspects,
     calculatedCoords: { lat, lon },
   };
 }
