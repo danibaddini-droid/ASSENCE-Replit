@@ -11,6 +11,7 @@ import {
 } from "@workspace/api-zod";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { ASSENCE_SYSTEM_PROMPT, buildChartPrompt } from "../lib/assence";
+import { calculateBirthChart } from "../lib/ephemeris";
 
 const router: IRouter = Router();
 
@@ -71,6 +72,26 @@ router.post("/readings", async (req, res): Promise<void> => {
     return;
   }
 
+  let birthChart: Record<string, unknown> = (parsed.data.birthChart as Record<string, unknown>) ?? {};
+  let autoCalculate = parsed.data.autoCalculate ?? false;
+  let ephemerisCalculated = false;
+
+  if (parsed.data.autoCalculate) {
+    try {
+      const calculated = await calculateBirthChart(
+        parsed.data.birthDate,
+        parsed.data.birthTime ?? null,
+        parsed.data.birthPlace
+      );
+      birthChart = calculated;
+      autoCalculate = false;
+      ephemerisCalculated = true;
+      req.log.info({ birthPlace: parsed.data.birthPlace }, "Ephemeris calculation succeeded");
+    } catch (err) {
+      req.log.warn({ err }, "Ephemeris calculation failed, falling back to AI auto-calculate");
+    }
+  }
+
   const [reading] = await db
     .insert(readingsTable)
     .values({
@@ -78,7 +99,7 @@ router.post("/readings", async (req, res): Promise<void> => {
       birthDate: parsed.data.birthDate,
       birthTime: parsed.data.birthTime ?? null,
       birthPlace: parsed.data.birthPlace,
-      birthChart: parsed.data.birthChart as Record<string, unknown>,
+      birthChart,
       clientAge: parsed.data.clientAge ?? null,
       notes: parsed.data.notes ?? null,
       analysisStatus: "pending",
@@ -87,8 +108,7 @@ router.post("/readings", async (req, res): Promise<void> => {
 
   res.status(201).json(GetReadingResponse.parse(serializeDates(reading)));
 
-  // Trigger AI analysis asynchronously
-  generateAnalysis(reading.id, parsed.data).catch((err) => {
+  generateAnalysis(reading.id, { ...parsed.data, birthChart, autoCalculate, ephemerisCalculated }).catch((err) => {
     req.log.error({ err, readingId: reading.id }, "Failed to generate analysis");
   });
 });
@@ -103,6 +123,7 @@ async function generateAnalysis(
     clientAge?: number | null;
     autoCalculate?: boolean | null;
     birthChart?: unknown;
+    ephemerisCalculated?: boolean;
   }
 ) {
   try {

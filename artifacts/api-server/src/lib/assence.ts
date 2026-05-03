@@ -175,6 +175,7 @@ export function buildChartPrompt(data: {
   clientAge?: number | null;
   autoCalculate?: boolean | null;
   birthChart?: unknown;
+  ephemerisCalculated?: boolean;
 }): string {
   if (data.autoCalculate) {
     return `Por favor, realize a análise astrológica completa seguindo o método Assence para:
@@ -225,7 +226,7 @@ Hora de Nascimento: ${data.birthTime ?? "Não informada"}
 Local de Nascimento: ${data.birthPlace}
 ${data.clientAge != null ? `Idade: ${data.clientAge} anos` : ""}
 
-POSIÇÕES PLANETÁRIAS:
+POSIÇÕES PLANETÁRIAS${data.ephemerisCalculated ? " (calculadas via efemérides astronômicas, sistema de casas iguais)" : ""}:
 ${planetLines.join("\n")}
 ${aspectLines}
 
