@@ -82,6 +82,14 @@ export interface CreateReadingBody {
   timezoneOverride?: string | null;
 }
 
+export interface RecalculateReadingBody {
+  /**
+   * IANA timezone name override. If null, auto-detected from birth place coordinates.
+   * @nullable
+   */
+  timezoneOverride?: string | null;
+}
+
 export type ReadingBirthChart = { [key: string]: unknown };
 
 export interface Reading {

@@ -4,6 +4,7 @@ import { db, readingsTable } from "@workspace/db";
 import {
   CreateReadingBody,
   UpdateReadingBody,
+  RecalculateReadingBody,
   GetReadingParams,
   DeleteReadingParams,
   ListReadingsResponse,
@@ -198,6 +199,39 @@ router.patch("/readings/:id", async (req, res): Promise<void> => {
   if (!updated) { res.status(404).json({ error: "Reading not found" }); return; }
 
   res.json(GetReadingResponse.parse(serializeDates(updated)));
+});
+
+router.post("/readings/:id/recalculate", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
+
+  const [reading] = await db.select().from(readingsTable).where(eq(readingsTable.id, id));
+  if (!reading) { res.status(404).json({ error: "Reading not found" }); return; }
+
+  const body = RecalculateReadingBody.safeParse(req.body ?? {});
+  const timezoneOverride = body.success ? (body.data.timezoneOverride ?? null) : null;
+
+  try {
+    const newChart = await calculateBirthChart(
+      reading.birthDate,
+      reading.birthTime ?? null,
+      reading.birthPlace,
+      timezoneOverride
+    );
+    req.log.info({ id, birthPlace: reading.birthPlace, timezoneOverride }, "Ephemeris recalculation succeeded");
+
+    const [updated] = await db
+      .update(readingsTable)
+      .set({ birthChart: newChart, updatedAt: new Date() })
+      .where(eq(readingsTable.id, id))
+      .returning();
+
+    res.json(GetReadingResponse.parse(serializeDates(updated)));
+  } catch (err) {
+    req.log.error({ err, id }, "Ephemeris recalculation failed");
+    res.status(500).json({ error: "Ephemeris recalculation failed" });
+  }
 });
 
 router.delete("/readings/:id", async (req, res): Promise<void> => {

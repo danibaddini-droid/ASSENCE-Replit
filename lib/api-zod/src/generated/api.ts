@@ -242,6 +242,37 @@ export const DeleteReadingParams = zod.object({
 });
 
 /**
+ * @summary Recalculate ephemeris for an existing reading
+ */
+export const RecalculateReadingParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RecalculateReadingBody = zod.object({
+  timezoneOverride: zod
+    .string()
+    .nullish()
+    .describe(
+      "IANA timezone name override. If null, auto-detected from birth place coordinates.",
+    ),
+});
+
+export const RecalculateReadingResponse = zod.object({
+  id: zod.number(),
+  clientName: zod.string(),
+  birthDate: zod.string(),
+  birthTime: zod.string().nullish(),
+  birthPlace: zod.string(),
+  birthChart: zod.object({}).passthrough(),
+  analysis: zod.string().nullish(),
+  analysisStatus: zod.string(),
+  clientAge: zod.number().nullish(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
  * @summary Get statistics about readings
  */
 export const GetReadingsStatsResponse = zod.object({

@@ -20,5 +20,6 @@ export * from "./planetPosition";
 export * from "./reading";
 export * from "./readingBirthChart";
 export * from "./readingsStats";
+export * from "./recalculateReadingBody";
 export * from "./sendOpenaiMessageBody";
 export * from "./updateReadingBody";

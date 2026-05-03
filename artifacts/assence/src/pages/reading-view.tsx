@@ -5,6 +5,7 @@ import {
   getGetReadingQueryKey,
   useCreateConversation,
   useUpdateReading,
+  useRecalculateReading,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,13 +14,44 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download, NotebookPen, Save } from "lucide-react";
+import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download, NotebookPen, Save, Globe } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { PLANETS } from "@/lib/constants";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useToast } from "@/hooks/use-toast";
 import { exportReadingPDF } from "@/lib/export-pdf";
+
+const TZ_AUTO = "__auto__";
+const RECALC_TIMEZONES = [
+  { label: "Detectar automaticamente pelas coordenadas", value: TZ_AUTO },
+  { label: "UTC (Tempo Universal)", value: "UTC" },
+  { label: "America/Sao_Paulo — Brasil (BRT/BRST)", value: "America/Sao_Paulo" },
+  { label: "America/Manaus — Brasil Oeste (AMT)", value: "America/Manaus" },
+  { label: "America/Noronha — Fernando de Noronha", value: "America/Noronha" },
+  { label: "America/New_York — EUA Leste (ET)", value: "America/New_York" },
+  { label: "America/Chicago — EUA Central (CT)", value: "America/Chicago" },
+  { label: "America/Los_Angeles — EUA Oeste (PT)", value: "America/Los_Angeles" },
+  { label: "America/Mexico_City — México", value: "America/Mexico_City" },
+  { label: "America/Buenos_Aires — Argentina", value: "America/Argentina/Buenos_Aires" },
+  { label: "America/Santiago — Chile", value: "America/Santiago" },
+  { label: "America/Bogota — Colômbia", value: "America/Bogota" },
+  { label: "America/Lima — Peru", value: "America/Lima" },
+  { label: "Europe/Lisbon — Portugal", value: "Europe/Lisbon" },
+  { label: "Europe/London — Reino Unido (GMT/BST)", value: "Europe/London" },
+  { label: "Europe/Madrid — Espanha (CET)", value: "Europe/Madrid" },
+  { label: "Europe/Paris — França (CET)", value: "Europe/Paris" },
+  { label: "Europe/Moscow — Rússia (MSK)", value: "Europe/Moscow" },
+  { label: "Asia/Tokyo — Japão (JST)", value: "Asia/Tokyo" },
+  { label: "Asia/Shanghai — China (CST)", value: "Asia/Shanghai" },
+  { label: "Asia/Kolkata — Índia (IST)", value: "Asia/Kolkata" },
+  { label: "Asia/Dubai — EAU (GST)", value: "Asia/Dubai" },
+  { label: "Australia/Sydney — Austrália (AET)", value: "Australia/Sydney" },
+  { label: "Africa/Johannesburg — África do Sul (SAST)", value: "Africa/Johannesburg" },
+];
 
 function formatDegMin(decimal?: number | null): string {
   if (decimal === undefined || decimal === null) return "—";
@@ -51,10 +83,14 @@ export default function ReadingView() {
   const queryClient = useQueryClient();
   const createConversation = useCreateConversation();
   const updateReading = useUpdateReading();
+  const recalculateReading = useRecalculateReading();
   const [exporting, setExporting] = useState(false);
   const [notes, setNotes] = useState<string>("");
   const [notesDirty, setNotesDirty] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
+  const [recalcDialogOpen, setRecalcDialogOpen] = useState(false);
+  const [recalcTz, setRecalcTz] = useState(TZ_AUTO);
+  const [recalculating, setRecalculating] = useState(false);
 
   const { data: reading, isLoading } = useGetReading(readingId, {
     query: {
@@ -118,6 +154,30 @@ export default function ReadingView() {
     }
   }
 
+  async function handleRecalculate() {
+    if (!reading) return;
+    setRecalculating(true);
+    try {
+      const tzOverride = recalcTz && recalcTz !== TZ_AUTO ? recalcTz : null;
+      await recalculateReading.mutateAsync({
+        id: reading.id,
+        data: { timezoneOverride: tzOverride },
+      });
+      await queryClient.invalidateQueries({ queryKey: getGetReadingQueryKey(readingId) });
+      setRecalcDialogOpen(false);
+      toast({
+        title: "Mapa recalculado",
+        description: tzOverride
+          ? `Posições atualizadas com fuso ${tzOverride}.`
+          : "Posições atualizadas com detecção automática de fuso.",
+      });
+    } catch {
+      toast({ title: "Erro ao recalcular mapa", variant: "destructive" });
+    } finally {
+      setRecalculating(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6 animate-in fade-in duration-300 max-w-4xl">
@@ -169,8 +229,18 @@ export default function ReadingView() {
             })()}
           </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0 pt-8">
+        <div className="flex flex-wrap items-center gap-2 shrink-0 pt-8 justify-end">
           <StatusBadge status={reading.analysisStatus} />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setRecalcTz(TZ_AUTO); setRecalcDialogOpen(true); }}
+            className="text-muted-foreground hover:text-foreground border border-border/40 hover:border-border/70 h-8 px-2.5 text-xs"
+            title="Recalcular posições via efemérides"
+          >
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+            Recalcular Mapa
+          </Button>
           {reading.analysisStatus === "completed" && (
             <>
               <Button
@@ -345,6 +415,62 @@ export default function ReadingView() {
           </p>
         </CardContent>
       </Card>
+
+      <Dialog open={recalcDialogOpen} onOpenChange={setRecalcDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-card border-border/50">
+          <DialogHeader>
+            <DialogTitle className="font-sans flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 text-primary" />
+              Recalcular Posições Planetárias
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground pt-1">
+              As posições serão recalculadas via efemérides astronômicas (sistema de casas Placidus).
+              Escolha o fuso horário da hora de nascimento.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <Label className="flex items-center gap-1.5 text-sm">
+              <Globe className="h-3.5 w-3.5 text-muted-foreground" />
+              Fuso horário
+            </Label>
+            <Select value={recalcTz} onValueChange={setRecalcTz}>
+              <SelectTrigger className="bg-background/50">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RECALC_TIMEZONES.map((tz) => (
+                  <SelectItem key={tz.value} value={tz.value}>
+                    {tz.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {recalcTz && recalcTz !== TZ_AUTO
+                ? `Fuso manual: ${recalcTz}. A hora de nascimento será tratada como hora local neste fuso.`
+                : "O fuso será detectado automaticamente pelas coordenadas do local de nascimento."}
+            </p>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setRecalcDialogOpen(false)} disabled={recalculating}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleRecalculate}
+              disabled={recalculating}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {recalculating ? (
+                <><RefreshCw className="h-4 w-4 mr-2 animate-spin" />Recalculando…</>
+              ) : (
+                <><RefreshCw className="h-4 w-4 mr-2" />Recalcular</>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

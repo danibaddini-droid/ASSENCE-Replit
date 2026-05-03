@@ -25,6 +25,7 @@ import type {
   HealthStatus,
   Reading,
   ReadingsStats,
+  RecalculateReadingBody,
   SendOpenaiMessageBody,
   UpdateReadingBody,
 } from "./api.schemas";
@@ -530,6 +531,93 @@ export const useDeleteReading = <
   TContext
 > => {
   return useMutation(getDeleteReadingMutationOptions(options));
+};
+
+/**
+ * @summary Recalculate ephemeris for an existing reading
+ */
+export const getRecalculateReadingUrl = (id: number) => {
+  return `/api/readings/${id}/recalculate`;
+};
+
+export const recalculateReading = async (
+  id: number,
+  recalculateReadingBody?: RecalculateReadingBody,
+  options?: RequestInit,
+): Promise<Reading> => {
+  return customFetch<Reading>(getRecalculateReadingUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(recalculateReadingBody),
+  });
+};
+
+export const getRecalculateReadingMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recalculateReading>>,
+    TError,
+    { id: number; data: BodyType<RecalculateReadingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof recalculateReading>>,
+  TError,
+  { id: number; data: BodyType<RecalculateReadingBody> },
+  TContext
+> => {
+  const mutationKey = ["recalculateReading"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof recalculateReading>>,
+    { id: number; data: BodyType<RecalculateReadingBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return recalculateReading(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RecalculateReadingMutationResult = NonNullable<
+  Awaited<ReturnType<typeof recalculateReading>>
+>;
+export type RecalculateReadingMutationBody = BodyType<RecalculateReadingBody>;
+export type RecalculateReadingMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Recalculate ephemeris for an existing reading
+ */
+export const useRecalculateReading = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof recalculateReading>>,
+    TError,
+    { id: number; data: BodyType<RecalculateReadingBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof recalculateReading>>,
+  TError,
+  { id: number; data: BodyType<RecalculateReadingBody> },
+  TContext
+> => {
+  return useMutation(getRecalculateReadingMutationOptions(options));
 };
 
 /**
