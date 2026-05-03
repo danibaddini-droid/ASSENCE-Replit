@@ -19,7 +19,7 @@ function StatusBadge({ status }: { status: string }) {
     case "generating":
       return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 font-normal animate-pulse">Gerando...</Badge>;
     case "pending":
-      return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 font-normal">Pendente</Badge>;
+      return <Badge className="border-amber-500/30 font-normal text-[#25f4e3] bg-[#fe9a0033]">Pendente</Badge>;
     case "error":
       return <Badge variant="destructive" className="font-normal">Erro</Badge>;
     default:
@@ -56,7 +56,7 @@ export default function Readings() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-serif mb-1 text-[#25f4e3]">Mapas Natais</h1>
+          <h1 className="text-3xl font-sans mb-1 text-[#25f4e3]">Mapas Natais</h1>
           <p className="text-muted-foreground">
             {isLoading ? "Carregando…" : `${readings?.length ?? 0} mapa${readings?.length !== 1 ? "s" : ""} cadastrado${readings?.length !== 1 ? "s" : ""}`}
           </p>
