@@ -1,3 +1,6 @@
+import { find as geoTzFind } from "geo-tz";
+import { DateTime } from "luxon";
+
 const SIGNS = [
   "Áries", "Touro", "Gêmeos", "Câncer", "Leão", "Virgem",
   "Libra", "Escorpião", "Sagitário", "Capricórnio", "Aquário", "Peixes",
@@ -327,22 +330,40 @@ function calculateAspects(
   return aspects;
 }
 
+function localToUT(
+  birthDate: string,
+  birthTime: string | null | undefined,
+  lat: number,
+  lon: number
+): { yr: number; mo: number; dy: number; hrUT: number; mnUT: number; tzName: string; utcOffsetMin: number } {
+  const timePart = birthTime ?? "12:00";
+  const timezones = geoTzFind(lat, lon);
+  const tzName = timezones[0] ?? "UTC";
+
+  const dt = DateTime.fromISO(`${birthDate}T${timePart}:00`, { zone: tzName });
+  const utc = dt.toUTC();
+  return {
+    yr: utc.year,
+    mo: utc.month,
+    dy: utc.day,
+    hrUT: utc.hour,
+    mnUT: utc.minute,
+    tzName,
+    utcOffsetMin: dt.offset,
+  };
+}
+
 export async function calculateBirthChart(
   birthDate: string,
   birthTime: string | null | undefined,
   birthPlace: string
 ): Promise<Record<string, unknown>> {
-  const [yr, mo, dy] = birthDate.split("-").map(Number);
-  let hr = 12, mn = 0;
-  if (birthTime) {
-    const parts = birthTime.split(":").map(Number);
-    hr = parts[0]; mn = parts[1] ?? 0;
-  }
-
   const coords = await geocode(birthPlace);
   const { lat, lon } = coords;
 
-  const jd = toJD(yr, mo, dy, hr, mn);
+  const { yr, mo, dy, hrUT, mnUT, tzName, utcOffsetMin } = localToUT(birthDate, birthTime, lat, lon);
+
+  const jd = toJD(yr, mo, dy, hrUT, mnUT);
   const eps = obliquity(jd);
   const ramc = norm(gmstDeg(jd) + lon);
   const ascLon = calcAsc(ramc, eps, lat);
@@ -412,5 +433,6 @@ export async function calculateBirthChart(
     houseCusps,
     aspects,
     calculatedCoords: { lat, lon },
+    timezone: { name: tzName, utcOffsetMin },
   };
 }

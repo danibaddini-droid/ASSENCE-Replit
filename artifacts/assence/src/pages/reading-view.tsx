@@ -162,6 +162,11 @@ export default function ReadingView() {
             <span>{format(new Date(reading.birthDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
             {reading.birthTime && <><span>•</span><span>{reading.birthTime}</span></>}
             {reading.birthPlace && <><span>•</span><span>{reading.birthPlace}</span></>}
+            {(reading.birthChart as Record<string,unknown>)?.timezone && (() => {
+              const tz = (reading.birthChart as Record<string,unknown>).timezone as {name:string;utcOffsetMin:number};
+              const h = tz.utcOffsetMin / 60;
+              return <><span>•</span><span className="text-xs opacity-70">{tz.name} (UTC{h >= 0 ? "+" : ""}{h})</span></>;
+            })()}
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0 pt-8">

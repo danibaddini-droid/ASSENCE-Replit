@@ -218,15 +218,19 @@ Com base nestes dados de nascimento, calcule as posições planetárias aproxima
       ? `\nASPECTOS:\n${chart.aspects.map((a) => `${a.planet1} ${a.type} ${a.planet2}${a.orb != null ? ` (orbe ${a.orb}°)` : ""}`).join("\n")}`
       : "";
 
+  const tz = (data.birthChart as Record<string, unknown> | null)?.timezone as { name?: string; utcOffsetMin?: number } | undefined;
+  const tzLine = tz?.name ? `Fuso Horário: ${tz.name} (UTC${tz.utcOffsetMin != null ? (tz.utcOffsetMin >= 0 ? "+" : "") + (tz.utcOffsetMin / 60).toFixed(0) : ""})` : "";
+
   return `Por favor, realize a análise astrológica completa seguindo o método Assence para:
 
 Nome: ${data.clientName}
 Data de Nascimento: ${data.birthDate}
-Hora de Nascimento: ${data.birthTime ?? "Não informada"}
+Hora de Nascimento: ${data.birthTime ?? "Não informada"} (hora local)
 Local de Nascimento: ${data.birthPlace}
+${tzLine}
 ${data.clientAge != null ? `Idade: ${data.clientAge} anos` : ""}
 
-POSIÇÕES PLANETÁRIAS${data.ephemerisCalculated ? " (calculadas via efemérides astronômicas, sistema de casas Placidus)" : ""}:
+POSIÇÕES PLANETÁRIAS${data.ephemerisCalculated ? " (calculadas via efemérides astronômicas, sistema de casas Placidus tropical, hora local convertida para UT)" : ""}:
 ${planetLines.join("\n")}
 ${aspectLines}
 
