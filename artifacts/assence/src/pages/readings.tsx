@@ -15,11 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "completed":
-      return <Badge className="border-primary/30 font-normal text-[#25f4e3] bg-[#f4af2533]">Concluído</Badge>;
+      return <Badge className="border-primary/30 font-normal text-primary bg-[#f4af2533]">Concluído</Badge>;
     case "generating":
       return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 font-normal animate-pulse">Gerando...</Badge>;
     case "pending":
-      return <Badge className="border-amber-500/30 font-normal text-[#25f4e3] bg-[#fe9a0033]">Pendente</Badge>;
+      return <Badge className="border-amber-500/30 font-normal text-primary bg-[#fe9a0033]">Pendente</Badge>;
     case "error":
       return <Badge variant="destructive" className="font-normal">Erro</Badge>;
     default:
@@ -56,7 +56,7 @@ export default function Readings() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-sans mb-1 text-[#25f4e3]">Mapas Natais</h1>
+          <h1 className="text-3xl font-sans mb-1 text-primary">Mapas Natais</h1>
           <p className="text-muted-foreground">
             {isLoading ? "Carregando…" : `${readings?.length ?? 0} mapa${readings?.length !== 1 ? "s" : ""} cadastrado${readings?.length !== 1 ? "s" : ""}`}
           </p>
@@ -121,11 +121,11 @@ export default function Readings() {
               <Card className="border-border/50 bg-card/50 hover:bg-card/80 hover:border-primary/30 transition-all cursor-pointer group">
                 <CardContent className="p-4 md:p-5">
                   <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-[#25f4e3] bg-[#f4af251a] border-t-[#25f4e3] border-r-[#25f4e3] border-b-[#25f4e3] border-l-[#25f4e3]">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-primary bg-[#f4af251a] border-primary/40">
                       <Star className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-sans text-lg font-medium group-hover:text-primary transition-colors truncate text-[#25f4e3] bg-[transparent]">
+                      <h3 className="font-sans text-lg font-medium group-hover:text-primary transition-colors truncate text-primary bg-[transparent]">
                         {reading.clientName}
                       </h3>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-sm text-muted-foreground">
