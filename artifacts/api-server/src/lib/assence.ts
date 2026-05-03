@@ -110,7 +110,7 @@ Análise de cada aspecto significativo: dinâmica relacional, tensão/fluidez, c
 ## Combo de Entrega (OBRIGATÓRIO para cada item analisado)
 Ao final de cada seção (planetas, pontos, aspectos), inclua:
 
-**✨ O Textinho Perspicaz**: análise da alma do planeta/ponto como ele é sentido na prática — com perspicácia, sagacidade e uma pitada de humor ácido quando adequado.
+**✨** análise da alma do planeta/ponto como ele é sentido na prática — com perspicácia, sagacidade e uma pitada de humor ácido quando adequado.
 
 **🔬 Laboratório de Integração**: Exercícios práticos (respiração, visualização, rituais simples, sugestões de movimento).
 
@@ -217,5 +217,5 @@ POSIÇÕES PLANETÁRIAS:
 ${planetLines.join("\n")}
 ${aspectLines}
 
-Realize a análise completa conforme as diretrizes do método Assence, seguindo a estrutura obrigatória com todos os combos de entrega (Textinho Perspicaz, Laboratório de Integração, Poder do Verbo, Reflexão e Conselho de Ouro) para cada posição.`;
+Realize a análise completa conforme as diretrizes do método Assence, seguindo a estrutura obrigatória com todos os combos de entrega (análise da alma do planeta, Laboratório de Integração, Poder do Verbo, Reflexão e Conselho de Ouro) para cada posição.`;
 }
