@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MoonStar, Plus, Search, Trash2, ChevronRight, Star, Send, CheckCheck } from "lucide-react";
+import { MoonStar, Plus, Search, Trash2, ChevronRight, Star, Send, CheckCheck, SlidersHorizontal } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 function AnalysisStatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -54,6 +55,14 @@ export default function Readings() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [deliveryFilter, setDeliveryFilter] = useState<DeliveryFilter>("all");
+  const [signFilter, setSignFilter] = useState("all");
+
+  const getSunSign = (r: { birthChart: unknown }) =>
+    ((r.birthChart as Record<string, { sign: string } | undefined>)?.sun?.sign) ?? null;
+
+  const availableSigns = Array.from(
+    new Set((readings ?? []).map(getSunSign).filter(Boolean) as string[])
+  ).sort();
 
   const filtered = (readings ?? []).filter((r) => {
     const matchesSearch =
@@ -62,7 +71,8 @@ export default function Readings() {
     const matchesDelivery =
       deliveryFilter === "all" ||
       (deliveryFilter === "delivered" ? r.deliveryStatus === "delivered" : r.deliveryStatus !== "delivered");
-    return matchesSearch && matchesDelivery;
+    const matchesSign = signFilter === "all" || getSunSign(r) === signFilter;
+    return matchesSearch && matchesDelivery && matchesSign;
   });
 
   const counts = {
@@ -121,36 +131,73 @@ export default function Readings() {
       </div>
 
       {/* Search + filter row */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar por nome ou local…"
-            className="pl-9 bg-card/50 border-border/50"
-          />
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar por nome ou local…"
+              className="pl-9 bg-card/50 border-border/50"
+            />
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Sign filter */}
+            <Select value={signFilter} onValueChange={setSignFilter}>
+              <SelectTrigger className="w-44 bg-card/50 border-border/50 h-10 text-sm gap-2">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <SelectValue placeholder="Signo solar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os signos</SelectItem>
+                {availableSigns.map((sign) => {
+                  const count = (readings ?? []).filter((r) => getSunSign(r) === sign).length;
+                  return (
+                    <SelectItem key={sign} value={sign}>
+                      {sign}
+                      <span className="ml-auto text-muted-foreground text-xs pl-3">{count}</span>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+            {/* Delivery filter tabs */}
+            <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-card/50 p-1">
+              {filterTabs.map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setDeliveryFilter(tab.key)}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    deliveryFilter === tab.key
+                      ? "bg-primary/20 text-primary"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {tab.label}
+                  <span className={`ml-1.5 text-[10px] rounded-full px-1.5 py-0.5 ${
+                    deliveryFilter === tab.key ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {counts[tab.key]}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-border/50 bg-card/50 p-1 shrink-0">
-          {filterTabs.map((tab) => (
+        {/* Active sign filter pill */}
+        {signFilter !== "all" && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Filtrando por:</span>
             <button
-              key={tab.key}
-              onClick={() => setDeliveryFilter(tab.key)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                deliveryFilter === tab.key
-                  ? "bg-primary/20 text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              onClick={() => setSignFilter("all")}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-medium hover:bg-primary/25 transition-colors"
             >
-              {tab.label}
-              <span className={`ml-1.5 text-[10px] rounded-full px-1.5 py-0.5 ${
-                deliveryFilter === tab.key ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-              }`}>
-                {counts[tab.key]}
-              </span>
+              ☀ Sol em {signFilter}
+              <span className="ml-0.5 opacity-60">×</span>
             </button>
-          ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -174,7 +221,7 @@ export default function Readings() {
         <Card className="border-border/50 bg-card/50">
           <CardContent className="py-16 flex flex-col items-center text-muted-foreground">
             <MoonStar className="h-14 w-14 mb-4 opacity-20" />
-            {search || deliveryFilter !== "all" ? (
+            {search || deliveryFilter !== "all" || signFilter !== "all" ? (
               <>
                 <p className="text-lg font-sans">Nenhum resultado encontrado</p>
                 <p className="text-sm mt-1">Tente ajustar os filtros de busca.</p>
