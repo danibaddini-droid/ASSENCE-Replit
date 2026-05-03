@@ -15,7 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
     case "completed":
-      return <Badge className="bg-primary/20 text-primary border-primary/30 font-normal">Concluído</Badge>;
+      return <Badge className="border-primary/30 font-normal text-[#25f4e3] bg-[#f4af2533]">Concluído</Badge>;
     case "generating":
       return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 font-normal animate-pulse">Gerando...</Badge>;
     case "pending":
