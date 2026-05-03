@@ -12,11 +12,13 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle } from "lucide-react";
+import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download } from "lucide-react";
 import { PLANETS } from "@/lib/constants";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useToast } from "@/hooks/use-toast";
+import { exportReadingPDF } from "@/lib/export-pdf";
+import { useState } from "react";
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -40,6 +42,7 @@ export default function ReadingView() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const createConversation = useCreateConversation();
+  const [exporting, setExporting] = useState(false);
 
   const { data: reading, isLoading } = useGetReading(readingId, {
     query: {
@@ -63,6 +66,19 @@ export default function ReadingView() {
       navigate(`/conversar/${conv.id}`);
     } catch {
       toast({ title: "Erro ao iniciar conversa", variant: "destructive" });
+    }
+  }
+
+  async function handleExportPDF() {
+    if (!reading) return;
+    setExporting(true);
+    try {
+      await exportReadingPDF(reading);
+      toast({ title: "PDF exportado com sucesso" });
+    } catch {
+      toast({ title: "Erro ao exportar PDF", variant: "destructive" });
+    } finally {
+      setExporting(false);
     }
   }
 
@@ -115,14 +131,29 @@ export default function ReadingView() {
         <div className="flex items-center gap-3 shrink-0 pt-8">
           <StatusBadge status={reading.analysisStatus} />
           {reading.analysisStatus === "completed" && (
-            <Button
-              onClick={handleStartChat}
-              disabled={createConversation.isPending}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Conversar sobre este Mapa
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={handleExportPDF}
+                disabled={exporting}
+                className="border-primary/40 text-primary hover:bg-primary/10"
+              >
+                {exporting ? (
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Download className="h-4 w-4 mr-2" />
+                )}
+                {exporting ? "Gerando…" : "Exportar PDF"}
+              </Button>
+              <Button
+                onClick={handleStartChat}
+                disabled={createConversation.isPending}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Conversar sobre este Mapa
+              </Button>
+            </>
           )}
         </div>
       </div>
