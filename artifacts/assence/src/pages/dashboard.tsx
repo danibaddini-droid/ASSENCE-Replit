@@ -1,11 +1,22 @@
 import { useGetReadingsStats, useListReadings, getGetReadingsStatsQueryKey, getListReadingsQueryKey } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoonStar, Users, Clock, CheckCircle2, ChevronRight, Sparkles } from "lucide-react";
+import { MoonStar, Users, Clock, CheckCircle2, ChevronRight, Sparkles, Cake } from "lucide-react";
 import { Link } from "wouter";
-import { format } from "date-fns";
+import { format, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+
+const BIRTHDAY_WINDOW = 30;
+
+function daysUntilBirthday(birthDateStr: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const birth = new Date(birthDateStr + "T00:00:00");
+  let next = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
+  if (next < today) next = new Date(today.getFullYear() + 1, birth.getMonth(), birth.getDate());
+  return differenceInCalendarDays(next, today);
+}
 
 export default function Dashboard() {
   const { data: stats, isLoading: isStatsLoading } = useGetReadingsStats({
@@ -18,6 +29,11 @@ export default function Dashboard() {
 
   const recentReadings = readings?.slice(0, 5) || [];
 
+  const upcomingBirthdays = (readings ?? [])
+    .map((r) => ({ ...r, daysUntil: daysUntilBirthday(r.birthDate) }))
+    .filter((r) => r.daysUntil <= BIRTHDAY_WINDOW)
+    .sort((a, b) => a.daysUntil - b.daysUntil);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
@@ -26,24 +42,9 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard 
-          title="Total de Mapas" 
-          value={stats?.total} 
-          icon={Users} 
-          loading={isStatsLoading} 
-        />
-        <StatCard 
-          title="Mapas Concluídos" 
-          value={stats?.completed} 
-          icon={CheckCircle2} 
-          loading={isStatsLoading} 
-        />
-        <StatCard 
-          title="Este Mês" 
-          value={stats?.thisMonth} 
-          icon={Clock} 
-          loading={isStatsLoading} 
-        />
+        <StatCard title="Total de Mapas" value={stats?.total} icon={Users} loading={isStatsLoading} />
+        <StatCard title="Mapas Concluídos" value={stats?.completed} icon={CheckCircle2} loading={isStatsLoading} />
+        <StatCard title="Este Mês" value={stats?.thisMonth} icon={Clock} loading={isStatsLoading} />
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
             <CardTitle className="text-sm font-medium text-primary">Signo mais frequente</CardTitle>
@@ -61,6 +62,76 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Upcoming Birthdays */}
+      {!isReadingsLoading && upcomingBirthdays.length > 0 && (
+        <Card className="border-primary/20 bg-primary/5 backdrop-blur-sm">
+          <CardHeader className="border-b border-primary/15 pb-3">
+            <CardTitle className="font-sans text-lg flex items-center gap-2 text-primary">
+              <Cake className="h-5 w-5 text-primary" />
+              Aniversários nos próximos {BIRTHDAY_WINDOW} dias
+              <Badge className="ml-1 bg-primary/20 text-primary border-primary/30 font-normal text-xs">
+                {upcomingBirthdays.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-primary/10">
+              {upcomingBirthdays.map((reading) => {
+                const birth = new Date(reading.birthDate + "T00:00:00");
+                const sunSign = (reading.birthChart as Record<string, {sign:string}> | null)?.sun?.sign;
+                const isToday = reading.daysUntil === 0;
+                const isTomorrow = reading.daysUntil === 1;
+                const age = new Date().getFullYear() - birth.getFullYear() + (reading.daysUntil === 0 ? 0 : (reading.daysUntil > 0 ? 0 : 1));
+
+                return (
+                  <Link
+                    key={reading.id}
+                    href={`/mapa/${reading.id}`}
+                    className="flex items-center justify-between px-5 py-3.5 hover:bg-primary/5 transition-colors group"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base ${
+                        isToday
+                          ? "bg-primary/25 border border-primary/50 animate-pulse"
+                          : "bg-primary/10 border border-primary/20"
+                      }`}>
+                        {isToday ? "🎂" : "🎁"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                          {reading.clientName}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(birth, "dd 'de' MMMM", { locale: ptBR })}
+                          {sunSign && <span className="ml-2 opacity-70">• Sol em {sunSign}</span>}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 shrink-0 ml-4">
+                      {isToday ? (
+                        <span className="text-xs font-semibold text-primary bg-primary/15 border border-primary/30 px-2.5 py-1 rounded-full animate-pulse">
+                          Hoje! 🎉
+                        </span>
+                      ) : isTomorrow ? (
+                        <span className="text-xs font-medium text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
+                          Amanhã
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground bg-muted/50 border border-border/40 px-2.5 py-1 rounded-full">
+                          em {reading.daysUntil} dias
+                        </span>
+                      )}
+                      <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Recent analyses */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="border-b border-border/50 bg-card/50">
           <div className="flex items-center justify-between">
@@ -98,8 +169,8 @@ export default function Dashboard() {
           ) : (
             <div className="divide-y divide-border/50">
               {recentReadings.map((reading) => (
-                <Link 
-                  key={reading.id} 
+                <Link
+                  key={reading.id}
                   href={`/mapa/${reading.id}`}
                   className="flex items-center justify-between p-4 md:p-6 hover:bg-white/5 transition-colors group"
                 >
@@ -131,7 +202,7 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ title, value, icon: Icon, loading }: any) {
+function StatCard({ title, value, icon: Icon, loading }: { title: string; value: number | undefined; icon: React.ElementType; loading: boolean }) {
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
