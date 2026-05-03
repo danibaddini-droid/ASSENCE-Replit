@@ -141,43 +141,47 @@ export default function NewReading() {
     try {
       if (mode === "auto") {
         const result = await createReading.mutateAsync({
-          clientName,
-          birthDate,
-          birthTime: birthTime || undefined,
-          birthPlace,
-          clientAge: clientAge ? parseInt(clientAge) : undefined,
-          autoCalculate: true,
+          data: {
+            clientName,
+            birthDate,
+            birthTime: birthTime || undefined,
+            birthPlace,
+            clientAge: clientAge ? parseInt(clientAge) : undefined,
+            autoCalculate: true,
+          },
         });
         toast({ title: "Mapa criado!", description: "A IA está calculando as posições e gerando a análise…" });
         navigate(`/mapa/${result.id}`);
       } else {
         const result = await createReading.mutateAsync({
-          clientName,
-          birthDate,
-          birthTime: birthTime || undefined,
-          birthPlace,
-          clientAge: clientAge ? parseInt(clientAge) : undefined,
-          birthChart: {
-            ascendant,
-            midheaven,
-            ...Object.fromEntries(
-              PLANETS.map((p) => [
-                p.id,
-                {
-                  sign: planets[p.id].sign,
-                  house: planets[p.id].house,
-                  degree: toDecimal(planets[p.id].degrees, planets[p.id].minutes),
-                  retrograde: planets[p.id].retrograde,
-                },
-              ])
-            ),
-            houseCusps: houseCusps.map((c, i) => ({
-              house: i + 1,
-              sign: c.sign,
-              degrees: c.degrees,
-              minutes: c.minutes,
-            })),
-            aspects,
+          data: {
+            clientName,
+            birthDate,
+            birthTime: birthTime || undefined,
+            birthPlace,
+            clientAge: clientAge ? parseInt(clientAge) : undefined,
+            birthChart: {
+              ascendant,
+              midheaven,
+              ...Object.fromEntries(
+                PLANETS.map((p) => [
+                  p.id,
+                  {
+                    sign: planets[p.id].sign,
+                    house: planets[p.id].house,
+                    degree: toDecimal(planets[p.id].degrees, planets[p.id].minutes),
+                    retrograde: planets[p.id].retrograde,
+                  },
+                ])
+              ),
+              houseCusps: houseCusps.map((c, i) => ({
+                house: i + 1,
+                sign: c.sign,
+                degrees: c.degrees,
+                minutes: c.minutes,
+              })),
+              aspects,
+            },
           },
         });
         toast({ title: "Mapa criado com sucesso!", description: "A análise está sendo gerada…" });

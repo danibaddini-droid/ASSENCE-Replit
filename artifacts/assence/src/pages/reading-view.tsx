@@ -66,8 +66,10 @@ export default function ReadingView() {
     if (!reading) return;
     try {
       const conv = await createConversation.mutateAsync({
-        title: `Conversa sobre ${reading.clientName}`,
-        readingId: reading.id,
+        data: {
+          title: `Conversa sobre ${reading.clientName}`,
+          readingId: reading.id,
+        },
       });
       navigate(`/conversar/${conv.id}`);
     } catch {

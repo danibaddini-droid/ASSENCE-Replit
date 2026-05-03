@@ -241,6 +241,62 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
     },
   });
 
+  // ─── House cusps table ────────────────────────────────────────────────────
+  if (chart.houseCusps && (chart.houseCusps as unknown[]).length > 0) {
+    const cusps = chart.houseCusps as { house: number; sign: string; degrees?: number; minutes?: number }[];
+    const cuspsY0 = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
+    let cuspsY = cuspsY0;
+
+    if (cuspsY > H - 60) {
+      doc.addPage();
+      addPageBackground();
+      cuspsY = margin + 10;
+    }
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...DARK);
+    doc.text("Cúspides das Casas (Placidus)", margin, cuspsY);
+    doc.setDrawColor(...GOLD);
+    doc.setLineWidth(0.4);
+    doc.line(margin, cuspsY + 2, margin + 60, cuspsY + 2);
+
+    const cuspRows = cusps.map((c) => [
+      `Casa ${c.house}`,
+      c.sign,
+      `${c.degrees ?? 0}°${String(c.minutes ?? 0).padStart(2, "0")}'`,
+    ]);
+
+    autoTable(doc, {
+      startY: cuspsY + 7,
+      head: [["Casa", "Signo", "Posição"]],
+      body: cuspRows,
+      margin: { left: margin, right: margin },
+      tableWidth: contentW / 2,
+      styles: {
+        font: "helvetica",
+        fontSize: 8,
+        cellPadding: 2.5,
+        textColor: [...TEXT],
+        lineColor: [220, 210, 240],
+        lineWidth: 0.1,
+      },
+      headStyles: {
+        fillColor: [...DARK_MID],
+        textColor: [...GOLD],
+        fontStyle: "bold",
+        fontSize: 7.5,
+      },
+      alternateRowStyles: { fillColor: [246, 243, 252] },
+      bodyStyles: { fillColor: [...CREAM] },
+      columnStyles: {
+        0: { fontStyle: "bold", cellWidth: 20, textColor: [...GOLD] },
+        1: { cellWidth: 40 },
+        2: { cellWidth: 22, halign: "right", font: "courier", fontSize: 7.5 },
+      },
+    });
+  }
+
   // ─── Aspects table (grouped by type) ──────────────────────────────────────
   if (chart.aspects && (chart.aspects as unknown[]).length > 0) {
     const aspects = chart.aspects as { planet1: string; planet2: string; type: string; orb: number }[];
