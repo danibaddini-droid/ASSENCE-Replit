@@ -111,7 +111,9 @@ export default function Dashboard() {
                       <span>{format(new Date(reading.birthDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
                       <span>•</span>
                       <span className="flex items-center gap-1">
-                        Sol em {reading.birthChart.sun.sign}
+                        {(reading.birthChart as Record<string, unknown> | null)?.sun
+                          ? `Sol em ${(reading.birthChart as Record<string, {sign:string}>).sun.sign}`
+                          : reading.birthDate}
                       </span>
                     </div>
                   </div>

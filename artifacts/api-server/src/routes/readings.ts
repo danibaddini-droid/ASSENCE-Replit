@@ -104,6 +104,7 @@ router.post("/readings", async (req, res): Promise<void> => {
       birthPlace: parsed.data.birthPlace,
       birthChart,
       clientAge: parsed.data.clientAge ?? null,
+      clientEmail: parsed.data.clientEmail ?? null,
       notes: parsed.data.notes ?? null,
       analysisStatus: "pending",
     })

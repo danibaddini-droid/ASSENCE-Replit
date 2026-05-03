@@ -425,6 +425,8 @@ components:
           type: boolean
         clientAge:
           type: ["integer", "null"]
+        clientEmail:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
         timezoneOverride:
@@ -463,6 +465,8 @@ components:
           type: string
         clientAge:
           type: ["integer", "null"]
+        clientEmail:
+          type: ["string", "null"]
         notes:
           type: ["string", "null"]
         createdAt:

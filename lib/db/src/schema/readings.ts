@@ -12,6 +12,7 @@ export const readingsTable = pgTable("readings", {
   analysis: text("analysis"),
   analysisStatus: text("analysis_status").notNull().default("pending"),
   clientAge: integer("client_age"),
+  clientEmail: text("client_email"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

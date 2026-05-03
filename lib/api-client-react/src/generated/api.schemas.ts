@@ -74,6 +74,8 @@ export interface CreateReadingBody {
   /** @nullable */
   clientAge?: number | null;
   /** @nullable */
+  clientEmail?: string | null;
+  /** @nullable */
   notes?: string | null;
   /**
    * IANA timezone name (e.g. "UTC", "America/New_York"). If null, auto-detected from birth place coordinates.
@@ -105,6 +107,8 @@ export interface Reading {
   analysisStatus: string;
   /** @nullable */
   clientAge?: number | null;
+  /** @nullable */
+  clientEmail?: string | null;
   /** @nullable */
   notes?: string | null;
   createdAt: string;

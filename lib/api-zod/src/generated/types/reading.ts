@@ -21,6 +21,8 @@ export interface Reading {
   /** @nullable */
   clientAge?: number | null;
   /** @nullable */
+  clientEmail?: string | null;
+  /** @nullable */
   notes?: string | null;
   createdAt: string;
   updatedAt: string;

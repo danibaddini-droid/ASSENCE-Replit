@@ -9,10 +9,11 @@ import NewReading from "@/pages/new-reading";
 import Readings from "@/pages/readings";
 import ReadingView from "@/pages/reading-view";
 import Chat from "@/pages/chat";
+import ClientForm from "@/pages/client-form";
 
 const queryClient = new QueryClient();
 
-function Router() {
+function AdminRouter() {
   return (
     <Layout>
       <Switch>
@@ -24,6 +25,15 @@ function Router() {
         <Route component={NotFound} />
       </Switch>
     </Layout>
+  );
+}
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/solicitar" component={ClientForm} />
+      <Route component={AdminRouter} />
+    </Switch>
   );
 }
 
