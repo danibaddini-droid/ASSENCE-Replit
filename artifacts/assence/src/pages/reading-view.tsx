@@ -228,24 +228,7 @@ export default function ReadingView() {
       )}
 
       {chart.aspects && (chart.aspects as unknown[]).length > 0 && (
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="border-b border-border/50">
-            <CardTitle className="font-sans text-xl flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
-              Aspectos
-              <span className="text-sm font-normal text-muted-foreground ml-1">
-                ({(chart.aspects as unknown[]).length})
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 md:p-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              {(chart.aspects as { planet1: string; planet2: string; type: string; orb: number }[]).map((aspect, i) => (
-                <AspectRow key={i} aspect={aspect} />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <AspectsSection aspects={chart.aspects as { planet1: string; planet2: string; type: string; orb: number }[]} />
       )}
 
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
@@ -288,6 +271,74 @@ export default function ReadingView() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+const ASPECT_TYPES = ["Todos", "Conjunção", "Oposição", "Trígono", "Quadratura", "Sextil"] as const;
+
+function AspectsSection({ aspects }: { aspects: { planet1: string; planet2: string; type: string; orb: number }[] }) {
+  const [active, setActive] = useState<string>("Todos");
+
+  const counts = ASPECT_TYPES.reduce<Record<string, number>>((acc, t) => {
+    acc[t] = t === "Todos" ? aspects.length : aspects.filter((a) => a.type === t).length;
+    return acc;
+  }, {});
+
+  const filtered = active === "Todos" ? aspects : aspects.filter((a) => a.type === active);
+
+  const filterStyle = (type: string) => {
+    if (type === "Todos") return active === "Todos"
+      ? "bg-primary/20 text-primary border-primary/40"
+      : "text-muted-foreground border-border/40 hover:border-primary/30 hover:text-foreground";
+    const s = ASPECT_STYLES[type];
+    if (!s) return "";
+    return active === type
+      ? `${s.bg} ${s.color} ${s.border}`
+      : "text-muted-foreground border-border/40 hover:border-primary/30 hover:text-foreground";
+  };
+
+  return (
+    <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="border-b border-border/50">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <CardTitle className="font-sans text-xl flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            Aspectos
+            <span className="text-sm font-normal text-muted-foreground ml-1">
+              ({filtered.length}{active !== "Todos" ? ` de ${aspects.length}` : ""})
+            </span>
+          </CardTitle>
+          <div className="flex flex-wrap gap-1.5">
+            {ASPECT_TYPES.map((type) => {
+              const count = counts[type];
+              if (type !== "Todos" && count === 0) return null;
+              const sym = type !== "Todos" ? (ASPECT_STYLES[type]?.symbol ?? "") : null;
+              return (
+                <button
+                  key={type}
+                  onClick={() => setActive(type)}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${filterStyle(type)}`}
+                >
+                  {sym && <span className="text-sm leading-none">{sym}</span>}
+                  {type}
+                  <span className="opacity-60 ml-0.5">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 md:p-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {filtered.map((aspect, i) => (
+            <AspectRow key={`${active}-${i}`} aspect={aspect} />
+          ))}
+        </div>
+        {filtered.length === 0 && (
+          <p className="text-center text-muted-foreground text-sm py-6">Nenhum aspecto deste tipo encontrado.</p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
