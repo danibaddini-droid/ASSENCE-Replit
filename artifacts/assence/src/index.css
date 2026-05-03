@@ -1,0 +1,160 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root, .dark {
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+
+  --opaque-button-border-intensity: 9;
+
+  --elevate-1: rgba(255,255,255, .04);
+  --elevate-2: rgba(255,255,255, .09);
+
+  /* Deep Indigo / Midnight Navy / Cosmic Vibe */
+  --background: 232 45% 6%;
+  --foreground: 220 20% 90%;
+
+  --border: 232 30% 15%;
+  
+  --card: 232 45% 8%;
+  --card-foreground: 220 20% 90%;
+  --card-border: 232 30% 18%;
+
+  --sidebar: 232 50% 5%;
+  --sidebar-foreground: 220 20% 90%;
+  --sidebar-border: 232 30% 15%;
+  --sidebar-primary: 40 90% 55%;
+  --sidebar-primary-foreground: 232 50% 5%;
+  --sidebar-accent: 232 30% 12%;
+  --sidebar-accent-foreground: 40 90% 65%;
+  --sidebar-ring: 40 90% 55%;
+
+  --popover: 232 45% 8%;
+  --popover-foreground: 220 20% 90%;
+  --popover-border: 232 30% 18%;
+
+  /* Gold / Amber for accents */
+  --primary: 40 90% 55%;
+  --primary-foreground: 232 50% 5%;
+
+  --secondary: 232 30% 15%;
+  --secondary-foreground: 220 20% 90%;
+
+  --muted: 232 20% 12%;
+  --muted-foreground: 220 15% 65%;
+
+  --accent: 232 30% 15%;
+  --accent-foreground: 40 90% 65%;
+
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+
+  --input: 232 30% 18%;
+  --ring: 40 90% 55%;
+  
+  --chart-1: 40 90% 55%;
+  --chart-2: 260 60% 65%;
+  --chart-3: 310 50% 60%;
+  --chart-4: 180 60% 50%;
+  --chart-5: 15 70% 60%;
+
+  --app-font-sans: 'Plus Jakarta Sans', sans-serif;
+  --app-font-serif: 'Cormorant Garamond', serif;
+  --app-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif font-medium;
+  }
+}
+
+.cosmic-gradient {
+  background: radial-gradient(circle at top right, hsl(var(--card-border)), transparent 50%),
+              radial-gradient(circle at bottom left, hsl(var(--muted)), transparent 50%);
+}
+
+.stars-bg {
+  background-image: 
+    radial-gradient(2px 2px at 20px 30px, #eee, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 40px 70px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 130px 80px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 160px 120px, #ddd, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 200px 200px;
+  animation: twinkle 5s infinite alternate;
+}
+
+@keyframes twinkle {
+  0% { opacity: 0.6; }
+  100% { opacity: 0.3; }
+}
+
+.constellation-lines {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10 L40 40 M40 40 L70 20 M70 20 L90 50' stroke='rgba(255,255,255,0.05)' stroke-width='1' fill='none'/%3E%3Ccircle cx='10' cy='10' r='1.5' fill='rgba(255,255,255,0.2)'/%3E%3Ccircle cx='40' cy='40' r='1.5' fill='rgba(255,255,255,0.2)'/%3E%3Ccircle cx='70' cy='20' r='2' fill='rgba(255,255,255,0.3)'/%3E%3Ccircle cx='90' cy='50' r='1' fill='rgba(255,255,255,0.2)'/%3E%3C/svg%3E");
+  background-size: 300px 300px;
+  opacity: 0.3;
+  pointer-events: none;
+}

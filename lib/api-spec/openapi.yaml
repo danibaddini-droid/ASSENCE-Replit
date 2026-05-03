@@ -1,22 +1,24 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Assence - Astrological Intelligence API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: readings
+    description: Astrological readings
+  - name: openai
+    description: OpenAI chat operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +26,184 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /readings:
+    get:
+      operationId: listReadings
+      tags: [readings]
+      summary: List all readings
+      responses:
+        "200":
+          description: List of readings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Reading"
+    post:
+      operationId: createReading
+      tags: [readings]
+      summary: Create a new astrological reading
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReadingBody"
+      responses:
+        "201":
+          description: Reading created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reading"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /readings/{id}:
+    get:
+      operationId: getReading
+      tags: [readings]
+      summary: Get a reading by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reading found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reading"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteReading
+      tags: [readings]
+      summary: Delete a reading
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /readings/stats:
+    get:
+      operationId: getReadingsStats
+      tags: [readings]
+      summary: Get statistics about readings
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadingsStats"
+
+  /openai/conversations:
+    get:
+      operationId: listConversations
+      tags: [openai]
+      summary: List conversations
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+    post:
+      operationId: createConversation
+      tags: [openai]
+      summary: Create a conversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateConversationBody"
+      responses:
+        "201":
+          description: Conversation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
+
+  /openai/conversations/{id}:
+    get:
+      operationId: getConversation
+      tags: [openai]
+      summary: Get conversation with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConversationWithMessages"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /openai/conversations/{id}/messages:
+    post:
+      operationId: sendConversationMessage
+      tags: [openai]
+      summary: Send a message and stream AI response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendOpenaiMessageBody"
+      responses:
+        "200":
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +214,253 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    PlanetPosition:
+      type: object
+      properties:
+        sign:
+          type: string
+        house:
+          type: integer
+        degree:
+          type: ["number", "null"]
+        retrograde:
+          type: boolean
+      required:
+        - sign
+        - house
+        - retrograde
+
+    Aspect:
+      type: object
+      properties:
+        planet1:
+          type: string
+        planet2:
+          type: string
+        type:
+          type: string
+        orb:
+          type: ["number", "null"]
+      required:
+        - planet1
+        - planet2
+        - type
+
+    BirthChart:
+      type: object
+      properties:
+        ascendant:
+          type: string
+        midheaven:
+          type: string
+        sun:
+          $ref: "#/components/schemas/PlanetPosition"
+        moon:
+          $ref: "#/components/schemas/PlanetPosition"
+        mercury:
+          $ref: "#/components/schemas/PlanetPosition"
+        venus:
+          $ref: "#/components/schemas/PlanetPosition"
+        mars:
+          $ref: "#/components/schemas/PlanetPosition"
+        jupiter:
+          $ref: "#/components/schemas/PlanetPosition"
+        saturn:
+          $ref: "#/components/schemas/PlanetPosition"
+        uranus:
+          $ref: "#/components/schemas/PlanetPosition"
+        neptune:
+          $ref: "#/components/schemas/PlanetPosition"
+        pluto:
+          $ref: "#/components/schemas/PlanetPosition"
+        chiron:
+          $ref: "#/components/schemas/PlanetPosition"
+        lilith:
+          $ref: "#/components/schemas/PlanetPosition"
+        northNode:
+          $ref: "#/components/schemas/PlanetPosition"
+        southNode:
+          $ref: "#/components/schemas/PlanetPosition"
+        aspects:
+          type: array
+          items:
+            $ref: "#/components/schemas/Aspect"
+      required:
+        - ascendant
+        - midheaven
+        - sun
+        - moon
+        - mercury
+        - venus
+        - mars
+        - jupiter
+        - saturn
+        - uranus
+        - neptune
+        - pluto
+
+    CreateReadingBody:
+      type: object
+      properties:
+        clientName:
+          type: string
+        birthDate:
+          type: string
+        birthTime:
+          type: ["string", "null"]
+        birthPlace:
+          type: string
+        birthChart:
+          $ref: "#/components/schemas/BirthChart"
+        clientAge:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+      required:
+        - clientName
+        - birthDate
+        - birthPlace
+        - birthChart
+
+    Reading:
+      type: object
+      properties:
+        id:
+          type: integer
+        clientName:
+          type: string
+        birthDate:
+          type: string
+        birthTime:
+          type: ["string", "null"]
+        birthPlace:
+          type: string
+        birthChart:
+          type: object
+        analysis:
+          type: ["string", "null"]
+        analysisStatus:
+          type: string
+        clientAge:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - clientName
+        - birthDate
+        - birthPlace
+        - birthChart
+        - analysisStatus
+        - createdAt
+        - updatedAt
+
+    ReadingsStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        completed:
+          type: integer
+        pending:
+          type: integer
+        thisMonth:
+          type: integer
+        mostCommonSunSign:
+          type: ["string", "null"]
+        mostCommonAscendant:
+          type: ["string", "null"]
+      required:
+        - total
+        - completed
+        - pending
+        - thisMonth
+
+    Conversation:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: ["string", "null"]
+        readingId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - createdAt
+        - updatedAt
+
+    CreateConversationBody:
+      type: object
+      properties:
+        title:
+          type: ["string", "null"]
+        readingId:
+          type: ["integer", "null"]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - conversationId
+        - role
+        - content
+        - createdAt
+
+    ConversationWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: ["string", "null"]
+        readingId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - messages
+
+    SendOpenaiMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+      required:
+        - content
