@@ -21,7 +21,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-serif text-primary mb-2">Visão Geral</h1>
+        <h1 className="text-3xl font-sans text-primary mb-2">Visão Geral</h1>
         <p className="text-muted-foreground">O pulso das estrelas sob sua orientação.</p>
       </div>
 
@@ -53,7 +53,7 @@ export default function Dashboard() {
             {isStatsLoading ? (
               <Skeleton className="h-8 w-20" />
             ) : (
-              <div className="text-2xl font-serif font-bold text-primary">
+              <div className="text-2xl font-sans font-bold text-primary">
                 {stats?.mostCommonSunSign || "N/A"}
               </div>
             )}
@@ -64,7 +64,7 @@ export default function Dashboard() {
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="border-b border-border/50 bg-card/50">
           <div className="flex items-center justify-between">
-            <CardTitle className="font-serif text-xl flex items-center gap-2">
+            <CardTitle className="font-sans text-xl flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               Análises Recentes
             </CardTitle>
@@ -140,7 +140,7 @@ function StatCard({ title, value, icon: Icon, loading }: any) {
         {loading ? (
           <Skeleton className="h-8 w-16" />
         ) : (
-          <div className="text-2xl font-serif font-bold text-foreground">
+          <div className="text-2xl font-sans font-bold text-foreground">
             {value}
           </div>
         )}

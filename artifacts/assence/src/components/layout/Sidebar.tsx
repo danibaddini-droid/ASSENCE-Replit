@@ -18,7 +18,7 @@ export function Sidebar() {
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary">
             <Sparkles className="h-5 w-5" />
           </div>
-          <span className="font-serif text-xl font-medium tracking-wide text-foreground">
+          <span className="font-sans text-xl font-medium tracking-wide text-foreground">
             Assence
           </span>
         </Link>
@@ -57,7 +57,7 @@ export function Sidebar() {
       </div>
       
       <div className="p-4 mt-auto border-t border-border/50">
-        <div className="text-xs text-muted-foreground text-center font-serif italic">
+        <div className="text-xs text-muted-foreground text-center font-sans italic">
           "As estrelas inclinam, não obrigam."
         </div>
       </div>

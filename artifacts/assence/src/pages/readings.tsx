@@ -100,12 +100,12 @@ export default function Readings() {
             <MoonStar className="h-14 w-14 mb-4 opacity-20" />
             {search ? (
               <>
-                <p className="text-lg font-serif">Nenhum resultado para "{search}"</p>
+                <p className="text-lg font-sans">Nenhum resultado para "{search}"</p>
                 <p className="text-sm mt-1">Tente outro nome ou local.</p>
               </>
             ) : (
               <>
-                <p className="text-lg font-serif">Nenhum mapa cadastrado ainda</p>
+                <p className="text-lg font-sans">Nenhum mapa cadastrado ainda</p>
                 <p className="text-sm mt-1">Comece criando a primeira análise astrológica.</p>
                 <Link href="/novo" className="mt-6 text-primary hover:text-primary/80 transition-colors inline-block px-6 py-2 border border-primary/30 rounded-full text-sm">
                   Criar Primeiro Mapa
@@ -125,7 +125,7 @@ export default function Readings() {
                       <Star className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-serif text-lg font-medium group-hover:text-primary transition-colors truncate text-[#25f4e3] bg-[transparent]">
+                      <h3 className="font-sans text-lg font-medium group-hover:text-primary transition-colors truncate text-[#25f4e3] bg-[transparent]">
                         {reading.clientName}
                       </h3>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-sm text-muted-foreground">

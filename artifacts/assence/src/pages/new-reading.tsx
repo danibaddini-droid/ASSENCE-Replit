@@ -191,7 +191,7 @@ export default function NewReading() {
   return (
     <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-500 max-w-4xl">
       <div>
-        <h1 className="text-3xl font-serif text-primary mb-2">Novo Mapa Natal</h1>
+        <h1 className="text-3xl font-sans text-primary mb-2">Novo Mapa Natal</h1>
         <p className="text-muted-foreground">Insira os dados para gerar a análise astrológica profunda pelo método Assence.</p>
       </div>
 
@@ -235,7 +235,7 @@ export default function NewReading() {
       {/* Dados da pessoa */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="border-b border-border/50">
-          <CardTitle className="font-serif text-xl flex items-center gap-2">
+          <CardTitle className="font-sans text-xl flex items-center gap-2">
             <User className="h-5 w-5 text-primary" />
             Dados da Pessoa
           </CardTitle>
@@ -278,7 +278,7 @@ export default function NewReading() {
               className="border-b border-border/50 cursor-pointer select-none"
               onClick={() => setShowPlanets((v) => !v)}
             >
-              <CardTitle className="font-serif text-xl flex items-center justify-between">
+              <CardTitle className="font-sans text-xl flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Star className="h-5 w-5 text-primary" />
                   Posições Planetárias
@@ -360,7 +360,7 @@ export default function NewReading() {
               className="border-b border-border/50 cursor-pointer select-none"
               onClick={() => setShowCusps((v) => !v)}
             >
-              <CardTitle className="font-serif text-xl flex items-center justify-between">
+              <CardTitle className="font-sans text-xl flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Home className="h-5 w-5 text-primary" />
                   Cúspides das Casas
@@ -405,7 +405,7 @@ export default function NewReading() {
               className="border-b border-border/50 cursor-pointer select-none"
               onClick={() => setShowAspects((v) => !v)}
             >
-              <CardTitle className="font-serif text-xl flex items-center justify-between">
+              <CardTitle className="font-sans text-xl flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-primary" />
                   Aspectos Planetários

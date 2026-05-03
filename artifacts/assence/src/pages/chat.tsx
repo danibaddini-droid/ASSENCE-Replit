@@ -143,7 +143,7 @@ export default function Chat() {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
         <AlertCircle className="h-12 w-12 mb-4 opacity-30" />
-        <p className="font-serif text-lg">Conversa não encontrada</p>
+        <p className="font-sans text-lg">Conversa não encontrada</p>
         <Button variant="ghost" className="mt-4" onClick={() => navigate("/mapas")}>
           <ChevronLeft className="h-4 w-4 mr-2" />
           Voltar aos mapas
@@ -162,7 +162,7 @@ export default function Chat() {
           <ChevronLeft className="h-4 w-4" />
           Voltar
         </button>
-        <h1 className="text-2xl font-serif text-primary">{conv.title ?? "Consulta Astrológica"}</h1>
+        <h1 className="text-2xl font-sans text-primary">{conv.title ?? "Consulta Astrológica"}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           Faça perguntas sobre o mapa natal e receba respostas baseadas no método Assence.
         </p>
@@ -173,7 +173,7 @@ export default function Chat() {
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-16">
               <Sparkles className="h-12 w-12 mb-4 opacity-20" />
-              <p className="font-serif text-lg text-center">Inicie a conversa</p>
+              <p className="font-sans text-lg text-center">Inicie a conversa</p>
               <p className="text-sm mt-1 text-center max-w-xs opacity-70">
                 Faça perguntas sobre aspectos, trânsitos, propósito de alma, padrões psicológicos e muito mais.
               </p>
@@ -202,7 +202,7 @@ export default function Chat() {
                 >
                   {msg.role === "assistant" ? (
                     <div className={cn(
-                      "prose prose-sm prose-invert prose-headings:font-serif prose-headings:text-primary prose-p:my-1 prose-headings:my-2 max-w-none",
+                      "prose prose-sm prose-invert prose-headings:font-sans prose-headings:text-primary prose-p:my-1 prose-headings:my-2 max-w-none",
                       msg.streaming && "after:content-['▋'] after:animate-pulse after:text-primary after:ml-0.5"
                     )}>
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content || " "}</ReactMarkdown>

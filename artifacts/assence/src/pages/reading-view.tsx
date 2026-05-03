@@ -105,7 +105,7 @@ export default function ReadingView() {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
         <AlertCircle className="h-12 w-12 mb-4 opacity-30" />
-        <p className="font-serif text-lg">Mapa não encontrado</p>
+        <p className="font-sans text-lg">Mapa não encontrado</p>
         <Button variant="ghost" className="mt-4" onClick={() => navigate("/mapas")}>
           <ChevronLeft className="h-4 w-4 mr-2" />
           Voltar aos mapas
@@ -127,7 +127,7 @@ export default function ReadingView() {
             <ChevronLeft className="h-4 w-4" />
             Mapas
           </button>
-          <h1 className="text-3xl font-serif text-primary">{reading.clientName}</h1>
+          <h1 className="text-3xl font-sans text-primary">{reading.clientName}</h1>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-muted-foreground">
             <span>{format(new Date(reading.birthDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
             {reading.birthTime && <><span>•</span><span>{reading.birthTime}</span></>}
@@ -173,7 +173,7 @@ export default function ReadingView() {
 
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="border-b border-border/50">
-          <CardTitle className="font-serif text-xl flex items-center gap-2">
+          <CardTitle className="font-sans text-xl flex items-center gap-2">
             <Star className="h-5 w-5 text-primary" />
             Planetas
           </CardTitle>
@@ -206,7 +206,7 @@ export default function ReadingView() {
       {chart.houseCusps && (chart.houseCusps as unknown[]).length > 0 && (
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader className="border-b border-border/50">
-            <CardTitle className="font-serif text-xl flex items-center gap-2">
+            <CardTitle className="font-sans text-xl flex items-center gap-2">
               <Star className="h-5 w-5 text-primary" />
               Cúspides das Casas
             </CardTitle>
@@ -230,7 +230,7 @@ export default function ReadingView() {
       {chart.aspects && chart.aspects.length > 0 && (
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader className="border-b border-border/50">
-            <CardTitle className="font-serif text-xl flex items-center gap-2">
+            <CardTitle className="font-sans text-xl flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               Aspectos
             </CardTitle>
@@ -252,7 +252,7 @@ export default function ReadingView() {
 
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="border-b border-border/50">
-          <CardTitle className="font-serif text-xl flex items-center gap-2">
+          <CardTitle className="font-sans text-xl flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             Análise Astrológica Assence
           </CardTitle>
@@ -261,7 +261,7 @@ export default function ReadingView() {
           {reading.analysisStatus === "pending" || reading.analysisStatus === "generating" ? (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <RefreshCw className="h-10 w-10 mb-4 animate-spin opacity-40" />
-              <p className="font-serif text-lg text-center">
+              <p className="font-sans text-lg text-center">
                 {reading.analysisStatus === "generating"
                   ? "A inteligência astrológica está tecendo a análise…"
                   : "Aguardando início da geração…"}
@@ -273,11 +273,11 @@ export default function ReadingView() {
           ) : reading.analysisStatus === "error" ? (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
               <AlertCircle className="h-10 w-10 mb-4 opacity-40 text-destructive" />
-              <p className="font-serif text-lg">Erro ao gerar a análise</p>
+              <p className="font-sans text-lg">Erro ao gerar a análise</p>
               <p className="text-sm mt-2">Tente novamente ou entre em contato com o suporte.</p>
             </div>
           ) : reading.analysis ? (
-            <div className="prose prose-invert prose-headings:font-serif prose-headings:text-primary prose-p:text-foreground/90 prose-p:leading-relaxed prose-code:text-primary prose-code:bg-primary/10 prose-pre:bg-background/50 prose-blockquote:border-primary/40 prose-blockquote:text-muted-foreground max-w-none">
+            <div className="prose prose-invert prose-headings:font-sans prose-headings:text-primary prose-p:text-foreground/90 prose-p:leading-relaxed prose-code:text-primary prose-code:bg-primary/10 prose-pre:bg-background/50 prose-blockquote:border-primary/40 prose-blockquote:text-muted-foreground max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
                 {reading.analysis}
               </ReactMarkdown>
@@ -301,7 +301,7 @@ function InfoCard({ icon: Icon, label, value }: { icon: React.ElementType; label
           <Icon className="h-3.5 w-3.5 text-primary" />
           <span className="text-xs text-muted-foreground uppercase tracking-wider">{label}</span>
         </div>
-        <p className="font-serif text-lg font-medium text-foreground">{value}</p>
+        <p className="font-sans text-lg font-medium text-foreground">{value}</p>
       </CardContent>
     </Card>
   );

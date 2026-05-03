@@ -16,7 +16,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20 text-primary">
               <Sparkles className="h-5 w-5" />
             </div>
-            <span className="font-serif text-xl font-medium tracking-wide text-foreground">
+            <span className="font-sans text-xl font-medium tracking-wide text-foreground">
               Assence
             </span>
           </div>
