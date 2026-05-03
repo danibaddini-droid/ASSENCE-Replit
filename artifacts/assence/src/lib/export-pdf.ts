@@ -241,7 +241,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
     },
   });
 
-  // ─── Aspects table (if any) ────────────────────────────────────────────────
+  // ─── Aspects table (grouped by type) ──────────────────────────────────────
   if (chart.aspects && (chart.aspects as unknown[]).length > 0) {
     const aspects = chart.aspects as { planet1: string; planet2: string; type: string; orb: number }[];
     const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
@@ -256,40 +256,90 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(...DARK);
-    doc.text("Aspectos", margin, aspectsY);
+    doc.text(`Aspectos  (${aspects.length})`, margin, aspectsY);
     doc.setDrawColor(...GOLD);
     doc.setLineWidth(0.4);
-    doc.line(margin, aspectsY + 2, margin + 25, aspectsY + 2);
+    doc.line(margin, aspectsY + 2, margin + 35, aspectsY + 2);
 
-    autoTable(doc, {
-      startY: aspectsY + 7,
-      head: [["Planeta 1", "Aspecto", "Planeta 2", "Orbe"]],
-      body: aspects.map((a) => [a.planet1, a.type, a.planet2, `${a.orb.toFixed(1)}°`]),
-      margin: { left: margin, right: margin },
-      tableWidth: contentW,
-      styles: {
-        font: "helvetica",
-        fontSize: 8,
-        cellPadding: 3,
-        textColor: [...TEXT],
-        lineColor: [220, 210, 240],
-        lineWidth: 0.1,
-      },
-      headStyles: {
-        fillColor: [...DARK_MID],
-        textColor: [...GOLD],
-        fontStyle: "bold",
-        fontSize: 7.5,
-      },
-      alternateRowStyles: { fillColor: [246, 243, 252] },
-      bodyStyles: { fillColor: [...CREAM] },
-      columnStyles: {
-        0: { fontStyle: "bold", cellWidth: 40 },
-        1: { cellWidth: 40 },
-        2: { fontStyle: "bold", cellWidth: 40 },
-        3: { cellWidth: 20, halign: "right" },
-      },
-    });
+    const ASPECT_ORDER = ["Conjunção", "Oposição", "Trígono", "Quadratura", "Sextil"];
+    const ASPECT_COLORS: Record<string, number[]> = {
+      "Conjunção":  [180, 140, 60],
+      "Oposição":   [200, 80,  80],
+      "Trígono":    [60,  160, 100],
+      "Quadratura": [200, 120, 50],
+      "Sextil":     [60,  150, 200],
+    };
+    const ASPECT_GLYPHS: Record<string, string> = {
+      "Conjunção": "\u260C",  "Oposição": "\u260D",
+      "Trígono": "\u25B3",    "Quadratura": "\u25A1",  "Sextil": "\u2736",
+    };
+    const grouped: Record<string, typeof aspects> = {};
+    for (const t of ASPECT_ORDER) grouped[t] = [];
+    for (const a of aspects) {
+      if (!grouped[a.type]) grouped[a.type] = [];
+      grouped[a.type].push(a);
+    }
+
+    let tableY = aspectsY + 8;
+
+    for (const type of ASPECT_ORDER) {
+      const rows = grouped[type];
+      if (!rows || rows.length === 0) continue;
+
+      // Check space
+      if (tableY > H - 50) {
+        doc.addPage();
+        addPageBackground();
+        tableY = margin + 10;
+      }
+
+      const typeColor = ASPECT_COLORS[type] ?? [...DARK];
+      const glyph = ASPECT_GLYPHS[type] ?? "";
+
+      // Type group header
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...(typeColor as [number, number, number]));
+      doc.text(`${glyph}  ${type}  (${rows.length})`, margin, tableY);
+      tableY += 5;
+
+      autoTable(doc, {
+        startY: tableY,
+        head: [["Planeta 1", "Planeta 2", "Orbe"]],
+        body: rows.map((a) => [a.planet1, a.planet2, `${a.orb.toFixed(1)}\u00B0`]),
+        margin: { left: margin, right: margin },
+        tableWidth: contentW,
+        styles: {
+          font: "helvetica",
+          fontSize: 8,
+          cellPadding: 2.5,
+          textColor: [...TEXT],
+          lineColor: [220, 210, 240],
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: [...(typeColor as [number, number, number])],
+          textColor: [255, 255, 255],
+          fontStyle: "bold",
+          fontSize: 7,
+        },
+        alternateRowStyles: { fillColor: [246, 243, 252] },
+        bodyStyles: { fillColor: [...CREAM] },
+        columnStyles: {
+          0: { fontStyle: "bold", cellWidth: 60 },
+          1: { fontStyle: "bold", cellWidth: 60 },
+          2: { cellWidth: 25, halign: "right" },
+        },
+        didParseCell: (data) => {
+          if (data.section === "body" && data.column.index === 2) {
+            data.cell.styles.textColor = typeColor as [number, number, number];
+            data.cell.styles.fontStyle = "bold";
+          }
+        },
+      });
+
+      tableY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 6;
+    }
   }
 
   // ─── Analysis section ──────────────────────────────────────────────────────
