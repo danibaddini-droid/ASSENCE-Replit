@@ -227,23 +227,21 @@ export default function ReadingView() {
         </Card>
       )}
 
-      {chart.aspects && chart.aspects.length > 0 && (
+      {chart.aspects && (chart.aspects as unknown[]).length > 0 && (
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader className="border-b border-border/50">
             <CardTitle className="font-sans text-xl flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               Aspectos
+              <span className="text-sm font-normal text-muted-foreground ml-1">
+                ({(chart.aspects as unknown[]).length})
+              </span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-border/30">
-              {chart.aspects.map((aspect: {planet1: string; planet2: string; type: string; orb: number}, i: number) => (
-                <div key={i} className="flex items-center justify-between px-5 py-3 text-sm">
-                  <span className="font-medium">{aspect.planet1}</span>
-                  <Badge variant="outline" className="text-xs font-normal">{aspect.type}</Badge>
-                  <span className="font-medium">{aspect.planet2}</span>
-                  <span className="text-muted-foreground text-xs w-16 text-right">orbe {aspect.orb.toFixed(1)}°</span>
-                </div>
+          <CardContent className="p-4 md:p-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              {(chart.aspects as { planet1: string; planet2: string; type: string; orb: number }[]).map((aspect, i) => (
+                <AspectRow key={i} aspect={aspect} />
               ))}
             </div>
           </CardContent>
@@ -289,6 +287,29 @@ export default function ReadingView() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+const ASPECT_STYLES: Record<string, { symbol: string; color: string; bg: string; border: string }> = {
+  "Conjunção":  { symbol: "☌", color: "text-amber-400",  bg: "bg-amber-500/10",  border: "border-amber-500/30" },
+  "Oposição":   { symbol: "☍", color: "text-red-400",    bg: "bg-red-500/10",    border: "border-red-500/30"   },
+  "Trígono":    { symbol: "△", color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/30" },
+  "Quadratura": { symbol: "□", color: "text-orange-400", bg: "bg-orange-500/10", border: "border-orange-500/30" },
+  "Sextil":     { symbol: "✶", color: "text-sky-400",    bg: "bg-sky-500/10",    border: "border-sky-500/30"   },
+};
+
+function AspectRow({ aspect }: { aspect: { planet1: string; planet2: string; type: string; orb: number } }) {
+  const style = ASPECT_STYLES[aspect.type] ?? { symbol: "·", color: "text-muted-foreground", bg: "bg-muted/20", border: "border-border/40" };
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-background/30 border border-border/20 text-sm">
+      <span className="w-24 shrink-0 text-foreground/80 truncate">{aspect.planet1}</span>
+      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border shrink-0 ${style.bg} ${style.color} ${style.border}`}>
+        <span className="text-base leading-none">{style.symbol}</span>
+        {aspect.type}
+      </span>
+      <span className="w-24 shrink-0 text-foreground/80 truncate">{aspect.planet2}</span>
+      <span className="ml-auto text-xs text-muted-foreground font-mono shrink-0">{aspect.orb.toFixed(1)}°</span>
     </div>
   );
 }
