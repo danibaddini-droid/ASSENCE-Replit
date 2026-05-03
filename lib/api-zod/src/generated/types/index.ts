@@ -14,6 +14,7 @@ export * from "./createConversationBody";
 export * from "./createReadingBody";
 export * from "./errorResponse";
 export * from "./healthStatus";
+export * from "./houseCusp";
 export * from "./message";
 export * from "./planetPosition";
 export * from "./reading";

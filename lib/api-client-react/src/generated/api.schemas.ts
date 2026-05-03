@@ -30,6 +30,13 @@ export interface Aspect {
   orb?: number | null;
 }
 
+export interface HouseCusp {
+  house: number;
+  sign: string;
+  degrees?: number;
+  minutes?: number;
+}
+
 export interface BirthChart {
   ascendant: string;
   midheaven: string;
@@ -47,6 +54,7 @@ export interface BirthChart {
   lilith?: PlanetPosition;
   northNode?: PlanetPosition;
   southNode?: PlanetPosition;
+  houseCusps?: HouseCusp[];
   aspects?: Aspect[];
 }
 

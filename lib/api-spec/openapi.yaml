@@ -253,6 +253,21 @@ components:
         - planet2
         - type
 
+    HouseCusp:
+      type: object
+      properties:
+        house:
+          type: integer
+        sign:
+          type: string
+        degrees:
+          type: integer
+        minutes:
+          type: integer
+      required:
+        - house
+        - sign
+
     BirthChart:
       type: object
       properties:
@@ -288,6 +303,10 @@ components:
           $ref: "#/components/schemas/PlanetPosition"
         southNode:
           $ref: "#/components/schemas/PlanetPosition"
+        houseCusps:
+          type: array
+          items:
+            $ref: "#/components/schemas/HouseCusp"
         aspects:
           type: array
           items:

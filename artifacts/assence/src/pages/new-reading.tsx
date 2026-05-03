@@ -8,14 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Trash2, Sparkles, ChevronDown, ChevronUp, User, Star } from "lucide-react";
+import { PlusCircle, Trash2, Sparkles, ChevronDown, ChevronUp, User, Star, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type PlanetEntry = {
   sign: string;
   house: number;
-  degree: number;
+  degrees: number;
+  minutes: number;
   retrograde: boolean;
+};
+
+type HouseCuspEntry = {
+  sign: string;
+  degrees: number;
+  minutes: number;
 };
 
 type AspectEntry = {
@@ -25,7 +32,55 @@ type AspectEntry = {
   orb: number;
 };
 
-const defaultPlanet = (): PlanetEntry => ({ sign: "Áries", house: 1, degree: 0, retrograde: false });
+const defaultPlanet = (): PlanetEntry => ({ sign: "Áries", house: 1, degrees: 0, minutes: 0, retrograde: false });
+const defaultCusp = (): HouseCuspEntry => ({ sign: "Áries", degrees: 0, minutes: 0 });
+
+function toDecimal(degrees: number, minutes: number): number {
+  return degrees + minutes / 60;
+}
+
+function DegMinInput({
+  degrees,
+  minutes,
+  onDegrees,
+  onMinutes,
+}: {
+  degrees: number;
+  minutes: number;
+  onDegrees: (v: number) => void;
+  onMinutes: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-0.5">
+      <Input
+        type="number"
+        min={0}
+        max={29}
+        value={degrees}
+        onChange={(e) => {
+          const v = Math.min(29, Math.max(0, parseInt(e.target.value) || 0));
+          onDegrees(v);
+        }}
+        className="h-8 text-xs bg-background/50 w-10 px-1 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        placeholder="°"
+      />
+      <span className="text-muted-foreground text-xs select-none">°</span>
+      <Input
+        type="number"
+        min={0}
+        max={59}
+        value={minutes}
+        onChange={(e) => {
+          const v = Math.min(59, Math.max(0, parseInt(e.target.value) || 0));
+          onMinutes(v);
+        }}
+        className="h-8 text-xs bg-background/50 w-10 px-1 text-center [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        placeholder="'"
+      />
+      <span className="text-muted-foreground text-xs select-none">'</span>
+    </div>
+  );
+}
 
 export default function NewReading() {
   const [, navigate] = useLocation();
@@ -45,12 +100,21 @@ export default function NewReading() {
     Object.fromEntries(PLANETS.map((p) => [p.id, defaultPlanet()]))
   );
 
+  const [houseCusps, setHouseCusps] = useState<HouseCuspEntry[]>(() =>
+    Array.from({ length: 12 }, defaultCusp)
+  );
+
   const [aspects, setAspects] = useState<AspectEntry[]>([]);
   const [showPlanets, setShowPlanets] = useState(true);
+  const [showCusps, setShowCusps] = useState(false);
   const [showAspects, setShowAspects] = useState(false);
 
   function updatePlanet(id: string, field: keyof PlanetEntry, value: string | number | boolean) {
     setPlanets((prev) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
+  }
+
+  function updateCusp(i: number, field: keyof HouseCuspEntry, value: string | number) {
+    setHouseCusps((prev) => prev.map((c, idx) => (idx === i ? { ...c, [field]: value } : c)));
   }
 
   function addAspect() {
@@ -82,7 +146,23 @@ export default function NewReading() {
         birthChart: {
           ascendant,
           midheaven,
-          ...Object.fromEntries(PLANETS.map((p) => [p.id, planets[p.id]])),
+          ...Object.fromEntries(
+            PLANETS.map((p) => [
+              p.id,
+              {
+                sign: planets[p.id].sign,
+                house: planets[p.id].house,
+                degree: toDecimal(planets[p.id].degrees, planets[p.id].minutes),
+                retrograde: planets[p.id].retrograde,
+              },
+            ])
+          ),
+          houseCusps: houseCusps.map((c, i) => ({
+            house: i + 1,
+            sign: c.sign,
+            degrees: c.degrees,
+            minutes: c.minutes,
+          })),
           aspects,
         },
       });
@@ -100,6 +180,7 @@ export default function NewReading() {
         <p className="text-muted-foreground">Insira os dados para gerar a análise astrológica profunda pelo método Assence.</p>
       </div>
 
+      {/* Dados da pessoa */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="border-b border-border/50">
           <CardTitle className="font-serif text-xl flex items-center gap-2">
@@ -136,6 +217,7 @@ export default function NewReading() {
         </CardContent>
       </Card>
 
+      {/* Posições planetárias */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader
           className="border-b border-border/50 cursor-pointer select-none"
@@ -150,7 +232,8 @@ export default function NewReading() {
           </CardTitle>
         </CardHeader>
         {showPlanets && (
-          <CardContent className="pt-6 space-y-6">
+          <CardContent className="pt-6 space-y-5">
+            {/* ASC / MC */}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-1.5">
                 <Label>Ascendente</Label>
@@ -168,42 +251,50 @@ export default function NewReading() {
               </div>
             </div>
 
-            <div className="space-y-3">
+            {/* Column headers */}
+            <div className="grid grid-cols-[80px_1fr_90px_110px_36px] gap-2 px-3">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Planeta</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Signo</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Casa</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Grau °&nbsp;&nbsp; Min '</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider text-center">Rx</span>
+            </div>
+
+            {/* Planet rows */}
+            <div className="space-y-1.5">
               {PLANETS.map((planet) => (
-                <div key={planet.id} className="grid grid-cols-12 gap-2 items-center p-3 rounded-lg bg-background/30 border border-border/30">
-                  <div className="col-span-2 text-sm font-medium text-muted-foreground">{planet.label}</div>
-                  <div className="col-span-3">
-                    <Select value={planets[planet.id].sign} onValueChange={(v) => updatePlanet(planet.id, "sign", v)}>
-                      <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue /></SelectTrigger>
-                      <SelectContent>{SIGNS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-2">
-                    <Select value={String(planets[planet.id].house)} onValueChange={(v) => updatePlanet(planet.id, "house", parseInt(v))}>
-                      <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue /></SelectTrigger>
-                      <SelectContent>{HOUSES.map((h) => <SelectItem key={h} value={String(h)}>Casa {h}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div className="col-span-3">
-                    <Input type="number" min={0} max={29.99} step={0.01}
-                      value={planets[planet.id].degree}
-                      onChange={(e) => updatePlanet(planet.id, "degree", parseFloat(e.target.value) || 0)}
-                      className="h-8 text-xs bg-background/50" placeholder="Grau" />
-                  </div>
-                  <div className="col-span-2 flex items-center justify-center">
-                    <button
-                      type="button"
-                      onClick={() => updatePlanet(planet.id, "retrograde", !planets[planet.id].retrograde)}
-                      className={cn(
-                        "text-xs px-2 py-1 rounded border transition-colors",
-                        planets[planet.id].retrograde
-                          ? "bg-primary/20 text-primary border-primary/40"
-                          : "bg-transparent text-muted-foreground border-border/40 hover:border-border"
-                      )}
-                    >
-                      Rx
-                    </button>
-                  </div>
+                <div key={planet.id} className="grid grid-cols-[80px_1fr_90px_110px_36px] gap-2 items-center px-3 py-2.5 rounded-lg bg-background/30 border border-border/30">
+                  <span className="text-sm font-medium text-muted-foreground truncate">{planet.label}</span>
+
+                  <Select value={planets[planet.id].sign} onValueChange={(v) => updatePlanet(planet.id, "sign", v)}>
+                    <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue /></SelectTrigger>
+                    <SelectContent>{SIGNS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  </Select>
+
+                  <Select value={String(planets[planet.id].house)} onValueChange={(v) => updatePlanet(planet.id, "house", parseInt(v))}>
+                    <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue /></SelectTrigger>
+                    <SelectContent>{HOUSES.map((h) => <SelectItem key={h} value={String(h)}>Casa {h}</SelectItem>)}</SelectContent>
+                  </Select>
+
+                  <DegMinInput
+                    degrees={planets[planet.id].degrees}
+                    minutes={planets[planet.id].minutes}
+                    onDegrees={(v) => updatePlanet(planet.id, "degrees", v)}
+                    onMinutes={(v) => updatePlanet(planet.id, "minutes", v)}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => updatePlanet(planet.id, "retrograde", !planets[planet.id].retrograde)}
+                    className={cn(
+                      "h-8 w-8 flex items-center justify-center text-xs rounded border transition-colors",
+                      planets[planet.id].retrograde
+                        ? "bg-primary/20 text-primary border-primary/40"
+                        : "bg-transparent text-muted-foreground border-border/40 hover:border-border"
+                    )}
+                  >
+                    Rx
+                  </button>
                 </div>
               ))}
             </div>
@@ -211,6 +302,57 @@ export default function NewReading() {
         )}
       </Card>
 
+      {/* Cúspides das casas */}
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader
+          className="border-b border-border/50 cursor-pointer select-none"
+          onClick={() => setShowCusps((v) => !v)}
+        >
+          <CardTitle className="font-serif text-xl flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Home className="h-5 w-5 text-primary" />
+              Cúspides das Casas
+            </span>
+            {showCusps ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+          </CardTitle>
+        </CardHeader>
+        {showCusps && (
+          <CardContent className="pt-6 space-y-4">
+            <p className="text-xs text-muted-foreground">
+              Graus e minutos do início de cada casa no mapa natal.
+            </p>
+
+            {/* Column headers */}
+            <div className="grid grid-cols-[70px_1fr_110px] gap-3 px-3">
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Casa</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Signo</span>
+              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Grau °&nbsp;&nbsp; Min '</span>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-1.5">
+              {houseCusps.map((cusp, i) => (
+                <div key={i} className="grid grid-cols-[70px_1fr_110px] gap-3 items-center px-3 py-2 rounded-lg bg-background/30 border border-border/30">
+                  <span className="text-sm font-medium text-primary">Casa {i + 1}</span>
+
+                  <Select value={cusp.sign} onValueChange={(v) => updateCusp(i, "sign", v)}>
+                    <SelectTrigger className="h-8 text-xs bg-background/50"><SelectValue /></SelectTrigger>
+                    <SelectContent>{SIGNS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  </Select>
+
+                  <DegMinInput
+                    degrees={cusp.degrees}
+                    minutes={cusp.minutes}
+                    onDegrees={(v) => updateCusp(i, "degrees", v)}
+                    onMinutes={(v) => updateCusp(i, "minutes", v)}
+                  />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Aspectos */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader
           className="border-b border-border/50 cursor-pointer select-none"
@@ -254,7 +396,7 @@ export default function NewReading() {
                 <div className="col-span-1">
                   <Input type="number" min={0} max={10} step={0.1} value={aspect.orb}
                     onChange={(e) => updateAspect(i, "orb", parseFloat(e.target.value) || 0)}
-                    className="h-8 text-xs bg-background/50" placeholder="orbe" />
+                    className="h-8 text-xs bg-background/50 px-1 text-center" placeholder="orbe" />
                 </div>
                 <div className="col-span-1 flex justify-end">
                   <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive"

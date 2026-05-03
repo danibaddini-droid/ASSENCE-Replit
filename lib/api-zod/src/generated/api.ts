@@ -152,6 +152,16 @@ export const CreateReadingBody = zod.object({
         retrograde: zod.boolean().nullish(),
       })
       .optional(),
+    houseCusps: zod
+      .array(
+        zod.object({
+          house: zod.number(),
+          sign: zod.string(),
+          degrees: zod.number().optional(),
+          minutes: zod.number().optional(),
+        }),
+      )
+      .optional(),
     aspects: zod
       .array(
         zod.object({

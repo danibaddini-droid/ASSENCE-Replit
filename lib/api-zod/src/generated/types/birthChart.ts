@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Aspect } from "./aspect";
+import type { HouseCusp } from "./houseCusp";
 import type { PlanetPosition } from "./planetPosition";
 
 export interface BirthChart {
@@ -25,5 +26,6 @@ export interface BirthChart {
   lilith?: PlanetPosition;
   northNode?: PlanetPosition;
   southNode?: PlanetPosition;
+  houseCusps?: HouseCusp[];
   aspects?: Aspect[];
 }

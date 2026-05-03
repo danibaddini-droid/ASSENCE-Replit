@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useLocation } from "wouter";
 import {
   useGetReading,
@@ -18,7 +18,13 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useToast } from "@/hooks/use-toast";
 import { exportReadingPDF } from "@/lib/export-pdf";
-import { useState } from "react";
+
+function formatDegMin(decimal?: number | null): string {
+  if (decimal === undefined || decimal === null) return "—";
+  const d = Math.floor(decimal);
+  const m = Math.round((decimal - d) * 60);
+  return `${d}°${String(m).padStart(2, "0")}'`;
+}
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -183,7 +189,9 @@ export default function ReadingView() {
                   <span className="font-medium flex-1">{pos.sign}</span>
                   <span className="text-muted-foreground">Casa {pos.house}</span>
                   {pos.degree !== undefined && (
-                    <span className="text-muted-foreground ml-4 w-12 text-right">{pos.degree.toFixed(1)}°</span>
+                    <span className="text-muted-foreground ml-4 w-16 text-right font-mono text-xs">
+                      {formatDegMin(pos.degree)}
+                    </span>
                   )}
                   {pos.retrograde && (
                     <span className="ml-3 text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">Rx</span>
@@ -194,6 +202,30 @@ export default function ReadingView() {
           </div>
         </CardContent>
       </Card>
+
+      {chart.houseCusps && (chart.houseCusps as unknown[]).length > 0 && (
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="border-b border-border/50">
+            <CardTitle className="font-serif text-xl flex items-center gap-2">
+              <Star className="h-5 w-5 text-primary" />
+              Cúspides das Casas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="grid grid-cols-2 md:grid-cols-3 divide-border/30">
+              {(chart.houseCusps as { house: number; sign: string; degrees?: number; minutes?: number }[]).map((cusp) => (
+                <div key={cusp.house} className="flex items-center justify-between px-5 py-3 text-sm border-b border-r border-border/20">
+                  <span className="text-primary font-medium w-16 shrink-0">Casa {cusp.house}</span>
+                  <span className="flex-1 font-medium">{cusp.sign}</span>
+                  <span className="text-muted-foreground font-mono text-xs">
+                    {cusp.degrees ?? 0}°{String(cusp.minutes ?? 0).padStart(2, "0")}'
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {chart.aspects && chart.aspects.length > 0 && (
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
