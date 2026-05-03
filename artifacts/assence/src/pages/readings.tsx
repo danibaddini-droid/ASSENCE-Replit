@@ -226,6 +226,11 @@ export default function Readings() {
                           </>
                         )}
                       </div>
+                      {reading.notes && (
+                        <p className="mt-1.5 text-xs text-muted-foreground/60 italic truncate max-w-md">
+                          {reading.notes}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <div className="hidden sm:flex items-center gap-2">
