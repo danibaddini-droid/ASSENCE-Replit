@@ -58,9 +58,18 @@ export interface BirthChart {
   aspects?: Aspect[];
 }
 
+export type UpdateReadingBodyDeliveryStatus =
+  (typeof UpdateReadingBodyDeliveryStatus)[keyof typeof UpdateReadingBodyDeliveryStatus];
+
+export const UpdateReadingBodyDeliveryStatus = {
+  pending: "pending",
+  delivered: "delivered",
+} as const;
+
 export interface UpdateReadingBody {
   /** @nullable */
   notes?: string | null;
+  deliveryStatus?: UpdateReadingBodyDeliveryStatus;
 }
 
 export interface CreateReadingBody {
@@ -94,6 +103,14 @@ export interface RecalculateReadingBody {
 
 export type ReadingBirthChart = { [key: string]: unknown };
 
+export type ReadingDeliveryStatus =
+  (typeof ReadingDeliveryStatus)[keyof typeof ReadingDeliveryStatus];
+
+export const ReadingDeliveryStatus = {
+  pending: "pending",
+  delivered: "delivered",
+} as const;
+
 export interface Reading {
   id: number;
   clientName: string;
@@ -109,6 +126,7 @@ export interface Reading {
   clientAge?: number | null;
   /** @nullable */
   clientEmail?: string | null;
+  deliveryStatus?: ReadingDeliveryStatus;
   /** @nullable */
   notes?: string | null;
   createdAt: string;

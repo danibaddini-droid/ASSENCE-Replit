@@ -203,9 +203,15 @@ router.patch("/readings/:id", async (req, res): Promise<void> => {
   const parsed = UpdateReadingBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.flatten() }); return; }
 
+  const setFields: Record<string, unknown> = { updatedAt: new Date() };
+  if ("notes" in parsed.data) setFields.notes = parsed.data.notes ?? null;
+  if ("deliveryStatus" in parsed.data && parsed.data.deliveryStatus !== undefined) {
+    setFields.deliveryStatus = parsed.data.deliveryStatus;
+  }
+
   const [updated] = await db
     .update(readingsTable)
-    .set({ notes: parsed.data.notes ?? null, updatedAt: new Date() })
+    .set(setFields)
     .where(eq(readingsTable.id, id))
     .returning();
 

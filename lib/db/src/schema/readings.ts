@@ -13,6 +13,7 @@ export const readingsTable = pgTable("readings", {
   analysisStatus: text("analysis_status").notNull().default("pending"),
   clientAge: integer("client_age"),
   clientEmail: text("client_email"),
+  deliveryStatus: text("delivery_status").notNull().default("pending"),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),

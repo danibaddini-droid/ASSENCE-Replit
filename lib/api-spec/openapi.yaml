@@ -407,6 +407,9 @@ components:
       properties:
         notes:
           type: ["string", "null"]
+        deliveryStatus:
+          type: string
+          enum: ["pending", "delivered"]
 
     CreateReadingBody:
       type: object
@@ -467,6 +470,9 @@ components:
           type: ["integer", "null"]
         clientEmail:
           type: ["string", "null"]
+        deliveryStatus:
+          type: string
+          enum: ["pending", "delivered"]
         notes:
           type: ["string", "null"]
         createdAt:

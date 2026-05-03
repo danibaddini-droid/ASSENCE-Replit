@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download, NotebookPen, Save, Globe } from "lucide-react";
+import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download, NotebookPen, Save, Globe, Send, CheckCheck } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -88,6 +88,7 @@ export default function ReadingView() {
   const regenerateReading = useRegenerateReading();
   const [exporting, setExporting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [togglingDelivery, setTogglingDelivery] = useState(false);
   const [notes, setNotes] = useState<string>("");
   const [notesDirty, setNotesDirty] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
@@ -154,6 +155,21 @@ export default function ReadingView() {
       toast({ title: "Erro ao exportar PDF", variant: "destructive" });
     } finally {
       setExporting(false);
+    }
+  }
+
+  async function handleToggleDelivery() {
+    if (!reading) return;
+    setTogglingDelivery(true);
+    const next = reading.deliveryStatus === "delivered" ? "pending" : "delivered";
+    try {
+      await updateReading.mutateAsync({ id: reading.id, data: { deliveryStatus: next } });
+      await queryClient.invalidateQueries({ queryKey: getGetReadingQueryKey(readingId) });
+      toast({ title: next === "delivered" ? "Análise marcada como entregue" : "Marcado como não entregue" });
+    } catch {
+      toast({ title: "Erro ao atualizar status", variant: "destructive" });
+    } finally {
+      setTogglingDelivery(false);
     }
   }
 
@@ -249,6 +265,29 @@ export default function ReadingView() {
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0 pt-8 justify-end">
           <StatusBadge status={reading.analysisStatus} />
+          {reading.deliveryStatus === "delivered" ? (
+            <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 font-normal gap-1">
+              <CheckCheck className="h-3 w-3" />
+              Entregue
+            </Badge>
+          ) : null}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleToggleDelivery}
+            disabled={togglingDelivery}
+            className={`border h-8 px-2.5 text-xs transition-colors ${
+              reading.deliveryStatus === "delivered"
+                ? "text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10"
+                : "text-muted-foreground border-border/40 hover:text-emerald-400 hover:border-emerald-500/30"
+            }`}
+            title={reading.deliveryStatus === "delivered" ? "Marcar como não entregue" : "Marcar análise como entregue ao cliente"}
+          >
+            {reading.deliveryStatus === "delivered"
+              ? <><CheckCheck className="h-3.5 w-3.5 mr-1.5" />Entregue</>
+              : <><Send className="h-3.5 w-3.5 mr-1.5" />Marcar como Entregue</>
+            }
+          </Button>
           <Button
             variant="ghost"
             size="sm"

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ReadingBirthChart } from "./readingBirthChart";
+import type { ReadingDeliveryStatus } from "./readingDeliveryStatus";
 
 export interface Reading {
   id: number;
@@ -22,6 +23,7 @@ export interface Reading {
   clientAge?: number | null;
   /** @nullable */
   clientEmail?: string | null;
+  deliveryStatus?: ReadingDeliveryStatus;
   /** @nullable */
   notes?: string | null;
   createdAt: string;

@@ -28,6 +28,7 @@ export const ListReadingsResponseItem = zod.object({
   analysisStatus: zod.string(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
+  deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
   notes: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
@@ -206,6 +207,7 @@ export const GetReadingResponse = zod.object({
   analysisStatus: zod.string(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
+  deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
   notes: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
@@ -220,6 +222,7 @@ export const UpdateReadingParams = zod.object({
 
 export const UpdateReadingBody = zod.object({
   notes: zod.string().nullish(),
+  deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
 });
 
 export const UpdateReadingResponse = zod.object({
@@ -233,6 +236,7 @@ export const UpdateReadingResponse = zod.object({
   analysisStatus: zod.string(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
+  deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
   notes: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
@@ -272,6 +276,7 @@ export const RecalculateReadingResponse = zod.object({
   analysisStatus: zod.string(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
+  deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
   notes: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
@@ -295,6 +300,7 @@ export const RegenerateReadingResponse = zod.object({
   analysisStatus: zod.string(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
+  deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
   notes: zod.string().nullish(),
   createdAt: zod.string(),
   updatedAt: zod.string(),
