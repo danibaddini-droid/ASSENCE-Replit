@@ -41,138 +41,141 @@ export const CreateReadingBody = zod.object({
   birthDate: zod.string(),
   birthTime: zod.string().nullish(),
   birthPlace: zod.string(),
-  birthChart: zod.object({
-    ascendant: zod.string(),
-    midheaven: zod.string(),
-    sun: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean().nullish(),
-    }),
-    moon: zod.object({
-      sign: zod.string(),
-      house: zod.number(),
-      degree: zod.number().nullish(),
-      retrograde: zod.boolean().nullish(),
-    }),
-    mercury: zod
-      .object({
+  birthChart: zod
+    .object({
+      ascendant: zod.string(),
+      midheaven: zod.string(),
+      sun: zod.object({
         sign: zod.string(),
         house: zod.number(),
         degree: zod.number().nullish(),
         retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    venus: zod
-      .object({
+      }),
+      moon: zod.object({
         sign: zod.string(),
         house: zod.number(),
         degree: zod.number().nullish(),
         retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    mars: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    jupiter: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    saturn: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    uranus: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    neptune: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    pluto: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    chiron: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    lilith: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    northNode: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    southNode: zod
-      .object({
-        sign: zod.string(),
-        house: zod.number(),
-        degree: zod.number().nullish(),
-        retrograde: zod.boolean().nullish(),
-      })
-      .optional(),
-    houseCusps: zod
-      .array(
-        zod.object({
-          house: zod.number(),
+      }),
+      mercury: zod
+        .object({
           sign: zod.string(),
-          degrees: zod.number().optional(),
-          minutes: zod.number().optional(),
-        }),
-      )
-      .optional(),
-    aspects: zod
-      .array(
-        zod.object({
-          planet1: zod.string(),
-          planet2: zod.string(),
-          type: zod.string(),
-          orb: zod.number().nullish(),
-        }),
-      )
-      .optional(),
-  }),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      venus: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      mars: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      jupiter: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      saturn: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      uranus: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      neptune: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      pluto: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      chiron: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      lilith: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      northNode: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      southNode: zod
+        .object({
+          sign: zod.string(),
+          house: zod.number(),
+          degree: zod.number().nullish(),
+          retrograde: zod.boolean().nullish(),
+        })
+        .optional(),
+      houseCusps: zod
+        .array(
+          zod.object({
+            house: zod.number(),
+            sign: zod.string(),
+            degrees: zod.number().optional(),
+            minutes: zod.number().optional(),
+          }),
+        )
+        .optional(),
+      aspects: zod
+        .array(
+          zod.object({
+            planet1: zod.string(),
+            planet2: zod.string(),
+            type: zod.string(),
+            orb: zod.number().nullish(),
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
+  autoCalculate: zod.boolean().optional(),
   clientAge: zod.number().nullish(),
   notes: zod.string().nullish(),
 });

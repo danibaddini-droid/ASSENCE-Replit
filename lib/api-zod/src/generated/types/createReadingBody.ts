@@ -13,7 +13,8 @@ export interface CreateReadingBody {
   /** @nullable */
   birthTime?: string | null;
   birthPlace: string;
-  birthChart: BirthChart;
+  birthChart?: BirthChart;
+  autoCalculate?: boolean;
   /** @nullable */
   clientAge?: number | null;
   /** @nullable */
