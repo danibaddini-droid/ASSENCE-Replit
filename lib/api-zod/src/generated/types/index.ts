@@ -8,10 +8,14 @@
 
 export * from "./aspect";
 export * from "./birthChart";
+export * from "./clientTransit";
+export * from "./clientTransitTransitsItem";
 export * from "./conversation";
 export * from "./conversationWithMessages";
 export * from "./createConversationBody";
 export * from "./createReadingBody";
+export * from "./dailyTransitPlanet";
+export * from "./dailyTransitsResult";
 export * from "./errorResponse";
 export * from "./healthStatus";
 export * from "./houseCusp";

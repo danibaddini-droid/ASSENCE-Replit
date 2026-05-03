@@ -359,6 +359,141 @@ function localToUT(
   };
 }
 
+const SIGN_INDEX: Record<string, number> = {
+  "Áries": 0, "Touro": 1, "Gêmeos": 2, "Câncer": 3, "Leão": 4, "Virgem": 5,
+  "Libra": 6, "Escorpião": 7, "Sagitário": 8, "Capricórnio": 9, "Aquário": 10, "Peixes": 11,
+};
+
+function natalLon(sign: string, degree: number): number {
+  const idx = SIGN_INDEX[sign] ?? 0;
+  return idx * 30 + degree;
+}
+
+function aspectAngle(lon1: number, lon2: number): number {
+  const d = Math.abs(lon1 - lon2) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+const TRANSIT_ASPECTS = [
+  { type: "Conjunção", angle: 0 },
+  { type: "Oposição", angle: 180 },
+  { type: "Quadratura", angle: 90 },
+  { type: "Trígono", angle: 120 },
+  { type: "Sextil", angle: 60 },
+];
+
+const TRANSIT_ORB = 3;
+
+export interface DailyTransitPlanet {
+  name: string;
+  sign: string;
+  degree: number;
+  retrograde: boolean;
+}
+
+export interface ClientTransit {
+  readingId: number;
+  clientName: string;
+  transits: Array<{ transitPlanet: string; natalPlanet: string; type: string; orb: number }>;
+  score: number;
+}
+
+export interface DailyTransitsResult {
+  date: string;
+  planets: DailyTransitPlanet[];
+  activatedClients: ClientTransit[];
+}
+
+type NatalChartEntry = { sign?: string; degree?: number };
+
+export function calculateTodayTransits(
+  readings: Array<{ id: number; clientName: string; birthChart: unknown }>
+): DailyTransitsResult {
+  const now = new Date();
+  const jd = toJD(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes());
+
+  // Today's planet longitudes
+  const transitLons: Record<string, number> = {
+    "Sol":       sunLon(jd),
+    "Lua":       moonLon(jd),
+    "Mercúrio":  planetGeoLon("mercury", jd),
+    "Vênus":     planetGeoLon("venus",   jd),
+    "Marte":     planetGeoLon("mars",    jd),
+    "Júpiter":   planetGeoLon("jupiter", jd),
+    "Saturno":   planetGeoLon("saturn",  jd),
+    "Urano":     planetGeoLon("uranus",  jd),
+    "Netuno":    planetGeoLon("neptune", jd),
+    "Plutão":    plutoLon(jd),
+    "Nodo Norte": northNodeLon(jd),
+  };
+
+  const planets: DailyTransitPlanet[] = Object.entries(transitLons).map(([name, lon]) => {
+    const { sign, degree } = signOf(lon);
+    let rx = false;
+    if (name === "Mercúrio") rx = retrograde(j => planetGeoLon("mercury", j), jd);
+    else if (name === "Vênus") rx = retrograde(j => planetGeoLon("venus", j), jd);
+    else if (name === "Marte") rx = retrograde(j => planetGeoLon("mars", j), jd);
+    else if (name === "Júpiter") rx = retrograde(j => planetGeoLon("jupiter", j), jd);
+    else if (name === "Saturno") rx = retrograde(j => planetGeoLon("saturn", j), jd);
+    else if (name === "Urano") rx = retrograde(j => planetGeoLon("uranus", j), jd);
+    else if (name === "Netuno") rx = retrograde(j => planetGeoLon("neptune", j), jd);
+    return { name, sign, degree: Math.round(degree * 10) / 10, retrograde: rx };
+  });
+
+  // Natal planet keys to Portuguese names
+  const NATAL_KEY_MAP: Record<string, string> = {
+    sun: "Sol", moon: "Lua", mercury: "Mercúrio", venus: "Vênus",
+    mars: "Marte", jupiter: "Júpiter", saturn: "Saturno",
+    uranus: "Urano", neptune: "Netuno", pluto: "Plutão",
+    northNode: "Nodo Norte", lilith: "Lilith",
+  };
+
+  const activatedClients: ClientTransit[] = [];
+
+  for (const reading of readings) {
+    const chart = reading.birthChart as Record<string, NatalChartEntry> | null;
+    if (!chart || !chart.sun?.sign) continue;
+
+    const clientTransits: ClientTransit["transits"] = [];
+
+    for (const [tName, tLon] of Object.entries(transitLons)) {
+      for (const [nKey, nLabel] of Object.entries(NATAL_KEY_MAP)) {
+        const natal = chart[nKey];
+        if (!natal?.sign || natal.degree === undefined) continue;
+        const nLon = natalLon(natal.sign, natal.degree);
+        const ang = aspectAngle(tLon, nLon);
+
+        for (const asp of TRANSIT_ASPECTS) {
+          const orb = Math.abs(ang - asp.angle);
+          if (orb <= TRANSIT_ORB) {
+            clientTransits.push({ transitPlanet: tName, natalPlanet: nLabel, type: asp.type, orb: Math.round(orb * 10) / 10 });
+            break;
+          }
+        }
+      }
+    }
+
+    if (clientTransits.length > 0) {
+      // Sort by tightest orb first
+      clientTransits.sort((a, b) => a.orb - b.orb);
+      activatedClients.push({
+        readingId: reading.id,
+        clientName: reading.clientName,
+        transits: clientTransits.slice(0, 5),
+        score: clientTransits.length,
+      });
+    }
+  }
+
+  activatedClients.sort((a, b) => b.score - a.score);
+
+  return {
+    date: now.toISOString().split("T")[0],
+    planets,
+    activatedClients: activatedClients.slice(0, 8),
+  };
+}
+
 export async function calculateBirthChart(
   birthDate: string,
   birthTime: string | null | undefined,

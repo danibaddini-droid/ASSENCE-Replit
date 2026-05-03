@@ -1,13 +1,34 @@
-import { useGetReadingsStats, useListReadings, getGetReadingsStatsQueryKey, getListReadingsQueryKey } from "@workspace/api-client-react";
+import {
+  useGetReadingsStats,
+  useListReadings,
+  useGetDailyTransits,
+  getGetReadingsStatsQueryKey,
+  getListReadingsQueryKey,
+  getGetDailyTransitsQueryKey,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MoonStar, Users, Clock, CheckCircle2, ChevronRight, Sparkles, Cake } from "lucide-react";
+import { MoonStar, Users, Clock, CheckCircle2, ChevronRight, Sparkles, Cake, Globe } from "lucide-react";
 import { Link } from "wouter";
 import { format, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 
 const BIRTHDAY_WINDOW = 30;
+
+const PLANET_SYMBOLS: Record<string, string> = {
+  "Sol": "☉", "Lua": "☽", "Mercúrio": "☿", "Vênus": "♀", "Marte": "♂",
+  "Júpiter": "♃", "Saturno": "♄", "Urano": "♅", "Netuno": "♆", "Plutão": "♇",
+  "Nodo Norte": "☊",
+};
+
+const ASPECT_COLORS: Record<string, string> = {
+  "Conjunção":  "text-primary bg-primary/15 border-primary/30",
+  "Trígono":    "text-emerald-400 bg-emerald-500/10 border-emerald-500/25",
+  "Sextil":     "text-sky-400 bg-sky-500/10 border-sky-500/25",
+  "Quadratura": "text-rose-400 bg-rose-500/10 border-rose-500/25",
+  "Oposição":   "text-orange-400 bg-orange-500/10 border-orange-500/25",
+};
 
 function daysUntilBirthday(birthDateStr: string): number {
   const today = new Date();
@@ -22,9 +43,11 @@ export default function Dashboard() {
   const { data: stats, isLoading: isStatsLoading } = useGetReadingsStats({
     query: { queryKey: getGetReadingsStatsQueryKey() }
   });
-  
   const { data: readings, isLoading: isReadingsLoading } = useListReadings({
     query: { queryKey: getListReadingsQueryKey() }
+  });
+  const { data: transits, isLoading: isTransitsLoading } = useGetDailyTransits({
+    query: { queryKey: getGetDailyTransitsQueryKey(), staleTime: 1000 * 60 * 30 }
   });
 
   const recentReadings = readings?.slice(0, 5) || [];
@@ -41,6 +64,7 @@ export default function Dashboard() {
         <p className="text-muted-foreground">O pulso das estrelas sob sua orientação.</p>
       </div>
 
+      {/* Stat cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Total de Mapas" value={stats?.total} icon={Users} loading={isStatsLoading} />
         <StatCard title="Mapas Concluídos" value={stats?.completed} icon={CheckCircle2} loading={isStatsLoading} />
@@ -51,16 +75,95 @@ export default function Dashboard() {
             <MoonStar className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            {isStatsLoading ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <div className="text-2xl font-sans font-bold text-primary">
-                {stats?.mostCommonSunSign || "N/A"}
-              </div>
+            {isStatsLoading ? <Skeleton className="h-8 w-20" /> : (
+              <div className="text-2xl font-sans font-bold text-primary">{stats?.mostCommonSunSign || "N/A"}</div>
             )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Daily Transits */}
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="border-b border-border/50 pb-3">
+          <CardTitle className="font-sans text-lg flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            Trânsitos do Dia
+            {transits?.date && (
+              <span className="ml-auto text-xs font-normal text-muted-foreground">
+                {format(new Date(transits.date + "T12:00:00"), "dd 'de' MMMM", { locale: ptBR })}
+              </span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-4 space-y-5">
+          {isTransitsLoading ? (
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+              {[...Array(11)].map((_, i) => <Skeleton key={i} className="h-14 rounded-lg" />)}
+            </div>
+          ) : (
+            <>
+              {/* Planet grid */}
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {(transits?.planets ?? []).map((p) => (
+                  <div key={p.name} className="flex flex-col items-center gap-1 rounded-lg border border-border/40 bg-background/50 px-2 py-2.5 text-center">
+                    <span className="text-lg text-primary leading-none">{PLANET_SYMBOLS[p.name] ?? "✦"}</span>
+                    <span className="text-[10px] font-medium text-muted-foreground leading-tight">{p.name}</span>
+                    <span className="text-xs font-medium text-foreground leading-tight">{p.sign}</span>
+                    <span className="text-[10px] text-muted-foreground/60">
+                      {Math.floor(p.degree)}°{p.retrograde ? " ℞" : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Activated clients */}
+              {(transits?.activatedClients?.length ?? 0) > 0 ? (
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3 text-primary" />
+                    Clientes mais ativados hoje
+                  </p>
+                  <div className="space-y-2">
+                    {(transits?.activatedClients ?? []).map((client) => (
+                      <Link key={client.readingId} href={`/mapa/${client.readingId}`}>
+                        <div className="flex items-start gap-3 rounded-lg border border-border/40 bg-background/30 p-3 hover:bg-background/60 hover:border-primary/25 transition-all group cursor-pointer">
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
+                            {client.score}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                              {client.clientName}
+                            </p>
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {client.transits.slice(0, 3).map((t, i) => (
+                                <span
+                                  key={i}
+                                  className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded border ${ASPECT_COLORS[t.type] ?? "text-muted-foreground bg-muted/30 border-border/40"}`}
+                                >
+                                  {PLANET_SYMBOLS[t.transitPlanet] ?? t.transitPlanet} {t.type} {PLANET_SYMBOLS[t.natalPlanet] ?? t.natalPlanet} natal
+                                  <span className="opacity-60">({t.orb}°)</span>
+                                </span>
+                              ))}
+                              {client.transits.length > 3 && (
+                                <span className="text-[10px] text-muted-foreground/60 px-1">+{client.transits.length - 3}</span>
+                              )}
+                            </div>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground/60 italic text-center py-2">
+                  Nenhum cliente com trânsitos exatos hoje (orbe ≤ 3°).
+                </p>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Upcoming Birthdays */}
       {!isReadingsLoading && upcomingBirthdays.length > 0 && (
@@ -81,26 +184,17 @@ export default function Dashboard() {
                 const sunSign = (reading.birthChart as Record<string, {sign:string}> | null)?.sun?.sign;
                 const isToday = reading.daysUntil === 0;
                 const isTomorrow = reading.daysUntil === 1;
-                const age = new Date().getFullYear() - birth.getFullYear() + (reading.daysUntil === 0 ? 0 : (reading.daysUntil > 0 ? 0 : 1));
-
                 return (
-                  <Link
-                    key={reading.id}
-                    href={`/mapa/${reading.id}`}
-                    className="flex items-center justify-between px-5 py-3.5 hover:bg-primary/5 transition-colors group"
-                  >
+                  <Link key={reading.id} href={`/mapa/${reading.id}`}
+                    className="flex items-center justify-between px-5 py-3.5 hover:bg-primary/5 transition-colors group">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base ${
-                        isToday
-                          ? "bg-primary/25 border border-primary/50 animate-pulse"
-                          : "bg-primary/10 border border-primary/20"
+                        isToday ? "bg-primary/25 border border-primary/50 animate-pulse" : "bg-primary/10 border border-primary/20"
                       }`}>
                         {isToday ? "🎂" : "🎁"}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-foreground group-hover:text-primary transition-colors truncate">
-                          {reading.clientName}
-                        </p>
+                        <p className="font-medium text-foreground group-hover:text-primary transition-colors truncate">{reading.clientName}</p>
                         <p className="text-xs text-muted-foreground">
                           {format(birth, "dd 'de' MMMM", { locale: ptBR })}
                           {sunSign && <span className="ml-2 opacity-70">• Sol em {sunSign}</span>}
@@ -109,17 +203,11 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-3 shrink-0 ml-4">
                       {isToday ? (
-                        <span className="text-xs font-semibold text-primary bg-primary/15 border border-primary/30 px-2.5 py-1 rounded-full animate-pulse">
-                          Hoje! 🎉
-                        </span>
+                        <span className="text-xs font-semibold text-primary bg-primary/15 border border-primary/30 px-2.5 py-1 rounded-full animate-pulse">Hoje! 🎉</span>
                       ) : isTomorrow ? (
-                        <span className="text-xs font-medium text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
-                          Amanhã
-                        </span>
+                        <span className="text-xs font-medium text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">Amanhã</span>
                       ) : (
-                        <span className="text-xs text-muted-foreground bg-muted/50 border border-border/40 px-2.5 py-1 rounded-full">
-                          em {reading.daysUntil} dias
-                        </span>
+                        <span className="text-xs text-muted-foreground bg-muted/50 border border-border/40 px-2.5 py-1 rounded-full">em {reading.daysUntil} dias</span>
                       )}
                       <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
@@ -169,19 +257,14 @@ export default function Dashboard() {
           ) : (
             <div className="divide-y divide-border/50">
               {recentReadings.map((reading) => (
-                <Link
-                  key={reading.id}
-                  href={`/mapa/${reading.id}`}
-                  className="flex items-center justify-between p-4 md:p-6 hover:bg-white/5 transition-colors group"
-                >
+                <Link key={reading.id} href={`/mapa/${reading.id}`}
+                  className="flex items-center justify-between p-4 md:p-6 hover:bg-white/5 transition-colors group">
                   <div>
-                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors text-lg">
-                      {reading.clientName}
-                    </h3>
+                    <h3 className="font-medium text-foreground group-hover:text-primary transition-colors text-lg">{reading.clientName}</h3>
                     <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                       <span>{format(new Date(reading.birthDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
                       <span>•</span>
-                      <span className="flex items-center gap-1">
+                      <span>
                         {(reading.birthChart as Record<string, unknown> | null)?.sun
                           ? `Sol em ${(reading.birthChart as Record<string, {sign:string}>).sun.sign}`
                           : reading.birthDate}
@@ -210,12 +293,8 @@ function StatCard({ title, value, icon: Icon, loading }: { title: string; value:
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        {loading ? (
-          <Skeleton className="h-8 w-16" />
-        ) : (
-          <div className="text-2xl font-sans font-bold text-foreground">
-            {value}
-          </div>
+        {loading ? <Skeleton className="h-8 w-16" /> : (
+          <div className="text-2xl font-sans font-bold text-foreground">{value}</div>
         )}
       </CardContent>
     </Card>
@@ -224,15 +303,10 @@ function StatCard({ title, value, icon: Icon, loading }: { title: string; value:
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
-    case 'completed':
-      return <Badge className="bg-primary/20 text-primary border-primary/30 hover:bg-primary/30 font-normal">Concluído</Badge>;
-    case 'generating':
-      return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 hover:bg-blue-500/30 font-normal animate-pulse">Gerando...</Badge>;
-    case 'pending':
-      return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30 font-normal">Pendente</Badge>;
-    case 'error':
-      return <Badge variant="destructive" className="font-normal">Erro</Badge>;
-    default:
-      return <Badge variant="outline" className="font-normal">{status}</Badge>;
+    case 'completed': return <Badge className="bg-primary/20 text-primary border-primary/30 font-normal">Concluído</Badge>;
+    case 'generating': return <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 font-normal animate-pulse">Gerando...</Badge>;
+    case 'pending':    return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 font-normal">Pendente</Badge>;
+    case 'error':      return <Badge variant="destructive" className="font-normal">Erro</Badge>;
+    default:           return <Badge variant="outline" className="font-normal">{status}</Badge>;
   }
 }

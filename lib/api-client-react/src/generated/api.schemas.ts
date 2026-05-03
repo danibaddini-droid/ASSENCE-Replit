@@ -144,6 +144,33 @@ export interface ReadingsStats {
   mostCommonAscendant?: string | null;
 }
 
+export interface DailyTransitPlanet {
+  name: string;
+  sign: string;
+  degree: number;
+  retrograde: boolean;
+}
+
+export type ClientTransitTransitsItem = {
+  transitPlanet: string;
+  natalPlanet: string;
+  type: string;
+  orb: number;
+};
+
+export interface ClientTransit {
+  readingId: number;
+  clientName: string;
+  transits: ClientTransitTransitsItem[];
+  score: number;
+}
+
+export interface DailyTransitsResult {
+  date: string;
+  planets: DailyTransitPlanet[];
+  activatedClients: ClientTransit[];
+}
+
 export interface Conversation {
   id: number;
   /** @nullable */

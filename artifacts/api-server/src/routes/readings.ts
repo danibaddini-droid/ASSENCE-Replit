@@ -13,7 +13,7 @@ import {
 } from "@workspace/api-zod";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { ASSENCE_SYSTEM_PROMPT, buildChartPrompt } from "../lib/assence";
-import { calculateBirthChart } from "../lib/ephemeris";
+import { calculateBirthChart, calculateTodayTransits } from "../lib/ephemeris";
 import { sendNewClientNotification } from "../lib/email";
 
 const router: IRouter = Router();
@@ -59,6 +59,14 @@ function serializeDates<T extends Record<string, unknown>>(obj: T): T {
     Object.entries(obj).map(([k, v]) => [k, v instanceof Date ? v.toISOString() : v])
   ) as T;
 }
+
+router.get("/readings/transits/today", async (req, res): Promise<void> => {
+  const readings = await db.select().from(readingsTable);
+  const result = calculateTodayTransits(
+    readings.map((r) => ({ id: r.id, clientName: r.clientName, birthChart: r.birthChart }))
+  );
+  res.json(result);
+});
 
 router.get("/readings", async (req, res): Promise<void> => {
   const readings = await db

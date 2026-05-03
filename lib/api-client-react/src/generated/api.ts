@@ -21,6 +21,7 @@ import type {
   ConversationWithMessages,
   CreateConversationBody,
   CreateReadingBody,
+  DailyTransitsResult,
   ErrorResponse,
   HealthStatus,
   Reading,
@@ -703,6 +704,81 @@ export const useRegenerateReading = <
 > => {
   return useMutation(getRegenerateReadingMutationOptions(options));
 };
+
+/**
+ * @summary Get today's planetary transits and most activated clients
+ */
+export const getGetDailyTransitsUrl = () => {
+  return `/api/readings/transits/today`;
+};
+
+export const getDailyTransits = async (
+  options?: RequestInit,
+): Promise<DailyTransitsResult> => {
+  return customFetch<DailyTransitsResult>(getGetDailyTransitsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDailyTransitsQueryKey = () => {
+  return [`/api/readings/transits/today`] as const;
+};
+
+export const getGetDailyTransitsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDailyTransits>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDailyTransits>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDailyTransitsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDailyTransits>>
+  > = ({ signal }) => getDailyTransits({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDailyTransits>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDailyTransitsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDailyTransits>>
+>;
+export type GetDailyTransitsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get today's planetary transits and most activated clients
+ */
+
+export function useGetDailyTransits<
+  TData = Awaited<ReturnType<typeof getDailyTransits>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDailyTransits>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDailyTransitsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Get statistics about readings

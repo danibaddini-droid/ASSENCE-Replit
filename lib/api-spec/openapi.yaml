@@ -194,6 +194,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /readings/transits/today:
+    get:
+      operationId: getDailyTransits
+      tags: [readings]
+      summary: Get today's planetary transits and most activated clients
+      responses:
+        "200":
+          description: Daily transits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyTransitsResult"
+
   /readings/stats:
     get:
       operationId: getReadingsStats
@@ -509,6 +522,59 @@ components:
         - completed
         - pending
         - thisMonth
+
+    DailyTransitPlanet:
+      type: object
+      properties:
+        name:
+          type: string
+        sign:
+          type: string
+        degree:
+          type: number
+        retrograde:
+          type: boolean
+      required: [name, sign, degree, retrograde]
+
+    ClientTransit:
+      type: object
+      properties:
+        readingId:
+          type: integer
+        clientName:
+          type: string
+        transits:
+          type: array
+          items:
+            type: object
+            properties:
+              transitPlanet:
+                type: string
+              natalPlanet:
+                type: string
+              type:
+                type: string
+              orb:
+                type: number
+            required: [transitPlanet, natalPlanet, type, orb]
+        score:
+          type: integer
+      required: [readingId, clientName, transits, score]
+
+    DailyTransitsResult:
+      type: object
+      properties:
+        date:
+          type: string
+        planets:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyTransitPlanet"
+        activatedClients:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClientTransit"
+      required: [date, planets, activatedClients]
 
     Conversation:
       type: object

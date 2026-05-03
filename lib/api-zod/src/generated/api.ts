@@ -307,6 +307,36 @@ export const RegenerateReadingResponse = zod.object({
 });
 
 /**
+ * @summary Get today's planetary transits and most activated clients
+ */
+export const GetDailyTransitsResponse = zod.object({
+  date: zod.string(),
+  planets: zod.array(
+    zod.object({
+      name: zod.string(),
+      sign: zod.string(),
+      degree: zod.number(),
+      retrograde: zod.boolean(),
+    }),
+  ),
+  activatedClients: zod.array(
+    zod.object({
+      readingId: zod.number(),
+      clientName: zod.string(),
+      transits: zod.array(
+        zod.object({
+          transitPlanet: zod.string(),
+          natalPlanet: zod.string(),
+          type: zod.string(),
+          orb: zod.number(),
+        }),
+      ),
+      score: zod.number(),
+    }),
+  ),
+});
+
+/**
  * @summary Get statistics about readings
  */
 export const GetReadingsStatsResponse = zod.object({
