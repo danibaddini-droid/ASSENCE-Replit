@@ -11,7 +11,7 @@ const MUTED = [100, 90, 130] as const;
 const TEXT = [40, 32, 70] as const;
 
 function formatBirthDate(dateStr: string): string {
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + "T12:00:00");
   return d.toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "long",

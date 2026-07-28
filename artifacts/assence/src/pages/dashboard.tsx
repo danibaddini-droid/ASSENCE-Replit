@@ -262,7 +262,7 @@ export default function Dashboard() {
                   <div>
                     <h3 className="font-medium text-foreground group-hover:text-primary transition-colors text-lg">{reading.clientName}</h3>
                     <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                      <span>{format(new Date(reading.birthDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                      <span>{format(new Date(reading.birthDate + "T12:00:00"), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
                       <span>•</span>
                       <span>
                         {(reading.birthChart as Record<string, unknown> | null)?.sun

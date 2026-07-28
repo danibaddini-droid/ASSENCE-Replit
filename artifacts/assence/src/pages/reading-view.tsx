@@ -252,7 +252,7 @@ export default function ReadingView() {
           </button>
           <h1 className="text-3xl font-sans text-primary">{reading.clientName}</h1>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-muted-foreground">
-            <span>{format(new Date(reading.birthDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+            <span>{format(new Date(reading.birthDate + "T12:00:00"), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
             {reading.birthTime && <><span>•</span><span>{reading.birthTime}</span></>}
             {reading.birthPlace && <><span>•</span><span>{reading.birthPlace}</span></>}
             {reading.clientEmail && <><span>•</span><span className="text-xs opacity-70">{reading.clientEmail}</span></>}

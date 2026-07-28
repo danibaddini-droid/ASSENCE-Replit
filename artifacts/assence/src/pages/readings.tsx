@@ -259,7 +259,7 @@ export default function Readings() {
                         {reading.clientName}
                       </h3>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5 text-sm text-muted-foreground">
-                        <span>{format(new Date(reading.birthDate), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                        <span>{format(new Date(reading.birthDate + "T12:00:00"), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
                         {reading.birthPlace && (
                           <>
                             <span className="hidden sm:inline">•</span>
