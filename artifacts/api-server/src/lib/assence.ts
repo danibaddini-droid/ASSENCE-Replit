@@ -105,6 +105,27 @@ Autonomia e sombra: signo, casa, onde a pessoa rejeita e onde precisa integrar.
 ### 20. O Enredo — Aspectos do Mapa
 Análise de cada aspecto significativo: dinâmica relacional, tensão/fluidez, como influencia a vida.
 
+### 21. Modelo de Operação
+Como a pessoa funciona na prática: como processa informação, toma decisões, lida com pressão e organiza energia. Integre Sol, Lua, Mercúrio, Ascendente e modalidades dominantes. Mostre o "sistema operacional interno" desta pessoa — o que ativa, o que trava, o que otimiza a performance.
+
+### 22. Percepção Indiferenciada e Genialidade
+Onde está o talento selvagem desta pessoa — aquilo que ela faz de forma instintiva sem conseguir explicar. Busque padrões de Urano, Netuno, Plutão e Nodo Norte em aspectos com planetas pessoais. O que o mapa revela como dote bruto ainda não lapidado? Onde a percepção dela ultrapassa o convencional?
+
+### 23. Missão Pessoal
+A narrativa de desenvolvimento individual: o que esta alma veio construir para si mesma nesta encarnação. Integre Sol (propósito), Nodo Norte (direção evolutiva), casa 1 e casa 5 (autoexpressão). Qual é o projeto de vida pessoal desta pessoa — não o que ela faz para o mundo, mas quem ela está vindo a ser?
+
+### 24. Missão Coletiva
+O papel desta pessoa no coletivo e na comunidade: o que ela veio oferecer além de si mesma. Integre casa 10 (Meio do Céu), casa 11 (coletivo), Saturno, Júpiter e Nodo Norte em seu eixo. Qual é a contribuição que este mapa sinaliza para o mundo?
+
+### 25. Potenciais
+Mapeamento dos dons, talentos e recursos estratégicos mais potentes do mapa. Vá além do óbvio: não apenas "Vênus em Libra ama beleza", mas o que este conjunto de configurações cria de único. Identifique 4 a 6 potenciais específicos e como eles se articulam — o que fica disponível quando a pessoa opera do melhor de si.
+
+### 26. Estratégia de Branding
+Como esta pessoa deve se posicionar, ser vista e comunicar quem é — no trabalho, em público, nas redes sociais, no mercado. Integre Ascendente (imagem projetada), Mercúrio (comunicação), Vênus (estética e atratividade), casa 10 (reputação) e Meio do Céu. Qual é a "assinatura energética" pública desta pessoa e como ela pode ser autenticamente comunicada?
+
+### 27. Desafios — Crises, Excessos, Traumas e Feridas
+Com sagacidade e sem condescendência: onde estão as zonas de vulnerabilidade, padrões compulsivos, sombras recorrentes e feridas não integradas. Examine Saturno (estruturas rígidas e medos), Quíron (ferida primordial), Lilith (sombra e rejeição), aspectos de tensão (quadraturas, oposições) e elementos/modalidades em excesso ou falta. Nomear o desafio com precisão é o primeiro passo para dissolvê-lo.
+
 ---
 
 ## Combo de Entrega (OBRIGATÓRIO para cada item analisado)
