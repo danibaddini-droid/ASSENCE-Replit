@@ -78,10 +78,12 @@ function northNodeLon(jd: number): number {
   return norm(125.0445479 - 1934.1362608 * T + 0.0020762 * T * T);
 }
 
-/** Mean Black Moon Lilith (h13) — Chapront formula */
+/** Mean Black Moon Lilith (h13) — lunar apogee = mean perigee + 180° */
 function lilithLon(jd: number): number {
   const T = (jd - 2451545) / 36525;
-  return norm(83.3532430 + 4069.0137287 * T - 0.0103200 * T * T - 0.00001249 * T * T * T);
+  // 83.3532430 + 4069.0137287*T is the mean PERIGEE longitude.
+  // BML = lunar APOGEE = perigee + 180°.
+  return norm(83.3532430 + 4069.0137287 * T - 0.0103200 * T * T - 0.00001249 * T * T * T + 180);
 }
 
 // ──────────────────────────────────────────────
