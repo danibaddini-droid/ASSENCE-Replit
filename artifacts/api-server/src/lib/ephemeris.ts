@@ -87,6 +87,68 @@ function lilithLon(jd: number): number {
 }
 
 // ──────────────────────────────────────────────
+// Quíron (2060 Chiron) — not in DE421
+// Computed via Kepler's equation + geocentric correction
+// Orbital elements J2000.0 (JPL approx.)
+// ──────────────────────────────────────────────
+
+function chironLon(jd: number, date: Date): number {
+  const a  = 13.6485;       // semi-major axis (AU)
+  const e  = 0.38017;       // eccentricity
+  const iR = 6.9259 * D2R;  // inclination
+  const OmR = 209.3795 * D2R; // longitude of ascending node
+  const omR = 339.5568 * D2R; // argument of perihelion
+  const T0  = 2450128.5;    // perihelion JD ≈ 1996-Feb-14
+  const P   = 18539.3;      // period in days (~50.76 yr)
+
+  // Mean anomaly
+  const M = norm((jd - T0) / P * 360) * D2R;
+
+  // Solve Kepler: E - e*sin(E) = M  (50 iterations → converges to 1e-12)
+  let E = M;
+  for (let k = 0; k < 50; k++) E = M + e * Math.sin(E);
+
+  // True anomaly ν
+  const nu = 2 * Math.atan2(
+    Math.sqrt(1 + e) * Math.sin(E / 2),
+    Math.sqrt(1 - e) * Math.cos(E / 2)
+  );
+
+  // Heliocentric distance
+  const r = a * (1 - e * Math.cos(E));
+
+  // Heliocentric ecliptic rectangular (standard transformation)
+  const cosOm = Math.cos(OmR), sinOm = Math.sin(OmR);
+  const cosnu  = Math.cos(omR + nu), sinnu = Math.sin(omR + nu);
+  const cosI   = Math.cos(iR),       sinI  = Math.sin(iR);
+
+  const xh = r * (cosOm * cosnu - sinOm * sinnu * cosI);
+  const yh = r * (sinOm * cosnu + cosOm * sinnu * cosI);
+  const zh = r * sinnu * sinI;
+
+  // Earth's heliocentric ecliptic position = −(geocentric Sun vector) rotated to ecliptic
+  const sunVec = Astronomy.GeoVector(Astronomy.Body.Sun, date, false);
+  const eps = obliquity(jd) * D2R;
+  // rotate equatorial → ecliptic (rotation about x-axis by +eps)
+  const ex =  -sunVec.x;
+  const ey =  -sunVec.y * Math.cos(eps) - sunVec.z * Math.sin(eps);
+
+  // Geocentric ecliptic longitude of Quíron
+  return norm(Math.atan2(yh - ey, xh - ex) * (180 / Math.PI));
+}
+
+function isChironRetrograde(jd: number, date: Date): boolean {
+  const prev = new Date(date.valueOf() - 12 * 3600 * 1000);
+  const next = new Date(date.valueOf() + 12 * 3600 * 1000);
+  const jdPrev = jd - 0.5;
+  const jdNext = jd + 0.5;
+  let delta = chironLon(jdNext, next) - chironLon(jdPrev, prev);
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+  return delta < 0;
+}
+
+// ──────────────────────────────────────────────
 // Obliquity, GMST, Ascendant/MC
 // ──────────────────────────────────────────────
 
@@ -356,7 +418,7 @@ export function calculateTodayTransits(
     sun: "Sol", moon: "Lua", mercury: "Mercúrio", venus: "Vênus",
     mars: "Marte", jupiter: "Júpiter", saturn: "Saturno",
     uranus: "Urano", neptune: "Netuno", pluto: "Plutão",
-    northNode: "Nodo Norte", lilith: "Lilith",
+    chiron: "Quíron", northNode: "Nodo Norte", lilith: "Lilith",
   };
 
   const activatedClients: ClientTransit[] = [];
@@ -451,10 +513,11 @@ export async function calculateBirthChart(
   const nepLon = geoEclipticLon("Neptune", utcDate);
   const pluLon = geoEclipticLon("Pluto",   utcDate);
 
-  // North Node and Lilith via analytical formulas
+  // North Node, Lilith and Quíron via analytical formulas
   const nnLon  = northNodeLon(jd);
   const snLon  = norm(nnLon + 180);
   const lilLon = lilithLon(jd);
+  const chirLon = chironLon(jd, utcDate);
 
   const { sign: ascSign, degree: ascDeg } = signOf(ascLon);
   const { sign: mcSign }                  = signOf(mcLon);
@@ -465,18 +528,19 @@ export async function calculateBirthChart(
   });
 
   const aspects = calculateAspects([
-    { name: "Sol",        lon: sLon   },
-    { name: "Lua",        lon: mLon   },
-    { name: "Mercúrio",   lon: merLon },
-    { name: "Vênus",      lon: venLon },
-    { name: "Marte",      lon: marLon },
-    { name: "Júpiter",    lon: jupLon },
-    { name: "Saturno",    lon: satLon },
-    { name: "Urano",      lon: uraLon },
-    { name: "Netuno",     lon: nepLon },
-    { name: "Plutão",     lon: pluLon },
-    { name: "Nodo Norte", lon: nnLon  },
-    { name: "Lilith",     lon: lilLon },
+    { name: "Sol",        lon: sLon    },
+    { name: "Lua",        lon: mLon    },
+    { name: "Mercúrio",   lon: merLon  },
+    { name: "Vênus",      lon: venLon  },
+    { name: "Marte",      lon: marLon  },
+    { name: "Júpiter",    lon: jupLon  },
+    { name: "Saturno",    lon: satLon  },
+    { name: "Urano",      lon: uraLon  },
+    { name: "Netuno",     lon: nepLon  },
+    { name: "Plutão",     lon: pluLon  },
+    { name: "Quíron",     lon: chirLon },
+    { name: "Nodo Norte", lon: nnLon   },
+    { name: "Lilith",     lon: lilLon  },
   ]);
 
   return {
@@ -494,6 +558,7 @@ export async function calculateBirthChart(
     uranus:   planet(uraLon, isRetrograde("Uranus",  utcDate)),
     neptune:  planet(nepLon, isRetrograde("Neptune", utcDate)),
     pluto:    planet(pluLon, isRetrograde("Pluto",   utcDate)),
+    chiron:   planet(chirLon, isChironRetrograde(jd, utcDate)),
     northNode: { ...planet(nnLon), retrograde: true },
     southNode: planet(snLon),
     lilith:   planet(lilLon),
