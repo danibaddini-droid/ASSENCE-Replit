@@ -158,16 +158,21 @@ async function generateAnalysis(
 
     const userPrompt = buildChartPrompt(data);
 
-    const completion = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
       model: "gpt-5.4",
-      max_completion_tokens: 8192,
+      max_completion_tokens: 32000,
+      stream: true,
       messages: [
         { role: "system", content: ASSENCE_SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
       ],
     });
 
-    const analysis = completion.choices[0]?.message?.content ?? "";
+    let analysis = "";
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content ?? "";
+      analysis += delta;
+    }
 
     await db
       .update(readingsTable)
