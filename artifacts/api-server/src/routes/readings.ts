@@ -137,6 +137,100 @@ router.post("/readings", async (req, res): Promise<void> => {
   });
 });
 
+const REQUIRED_ANALYSIS_SECTIONS = Array.from({ length: 27 }, (_, index) => index + 1);
+
+type AnalysisMessage = {
+  role: "system" | "user" | "assistant";
+  content: string;
+};
+
+function missingAnalysisSections(markdown: string): number[] {
+  return REQUIRED_ANALYSIS_SECTIONS.filter(
+    (number) => !new RegExp(`^#\\s+${number}\\.`, "m").test(markdown),
+  );
+}
+
+const ANALYSIS_BLOCKS = [
+  { start: 1, end: 10 },
+  { start: 11, end: 20 },
+  { start: 21, end: 27 },
+] as const;
+
+function missingSectionsInRange(markdown: string, start: number, end: number): number[] {
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index).filter(
+    (number) => !new RegExp(`^#\\s+${number}\\.`, "m").test(markdown),
+  );
+}
+
+async function requestAnalysis(messages: AnalysisMessage[]): Promise<string> {
+  const stream = await openai.chat.completions.create({
+    model: "gpt-5.4",
+    max_completion_tokens: 16000,
+    stream: true,
+    messages,
+  });
+
+  let content = "";
+  for await (const chunk of stream) {
+    content += chunk.choices[0]?.delta?.content ?? "";
+  }
+  return content;
+}
+
+async function generateAnalysisBlock(
+  userPrompt: string,
+  start: number,
+  end: number,
+  includeFinalSynthesis: boolean,
+): Promise<string> {
+  const finalSynthesis = includeFinalSynthesis
+    ? `
+
+Depois da seção 27, inclua também a **Visão Integradora Final**, com:
+### Eixos Principais da Personalidade
+### Caminho Evolutivo
+e uma síntese final consistente com o mapa.`
+    : "";
+
+  const blockPrompt = `${userPrompt}
+
+Esta é uma entrega dividida em blocos. Escreva SOMENTE as seções principais ${start} a ${end}, nesta ordem, sem pular nenhuma e sem reescrever outras seções.
+Use exatamente headings Markdown no formato "# N. Título" para cada seção principal.
+Cada seção deve ser desenvolvida com profundidade, usando os dados reais do mapa fornecido.
+Para cada seção aplicável, inclua o Combo de Entrega completo:
+**✨** Análise da alma
+**🔬 Laboratório de Integração**
+**💬 O Poder do Verbo**
+**🪞 Reflexão**
+**💛 Conselho de Ouro**
+Não faça um resumo superficial e não finalize a resposta antes de concluir a última seção solicitada.${finalSynthesis}`;
+
+  let result = await requestAnalysis([
+    { role: "system", content: ASSENCE_SYSTEM_PROMPT },
+    { role: "user", content: blockPrompt },
+  ]);
+
+  let missing = missingSectionsInRange(result, start, end);
+  if (missing.length > 0) {
+    result += await requestAnalysis([
+      { role: "system", content: ASSENCE_SYSTEM_PROMPT },
+      { role: "user", content: blockPrompt },
+      { role: "assistant", content: result },
+      {
+        role: "user",
+        content: `Complete agora somente as seções ausentes ${missing.join(", ")}. Comece cada uma exatamente com "# N. Título", desenvolva a análise e inclua o Combo de Entrega completo. Não repita as seções já concluídas.`,
+      },
+    ]);
+    missing = missingSectionsInRange(result, start, end);
+  }
+
+  if (missing.length > 0) {
+    throw new Error(`Bloco ${start}-${end} incompleto: faltam as seções ${missing.join(", ")}`);
+  }
+
+  return result;
+}
+
 async function generateAnalysis(
   readingId: number,
   data: {
@@ -158,20 +252,21 @@ async function generateAnalysis(
 
     const userPrompt = buildChartPrompt(data);
 
-    const stream = await openai.chat.completions.create({
-      model: "gpt-5.4",
-      max_completion_tokens: 32000,
-      stream: true,
-      messages: [
-        { role: "system", content: ASSENCE_SYSTEM_PROMPT },
-        { role: "user", content: userPrompt },
-      ],
-    });
+    const blockResults = await Promise.all(
+      ANALYSIS_BLOCKS.map((block, index) =>
+        generateAnalysisBlock(
+          userPrompt,
+          block.start,
+          block.end,
+          index === ANALYSIS_BLOCKS.length - 1,
+        ),
+      ),
+    );
+    const analysis = blockResults.join("\n\n");
+    const missingSections = missingAnalysisSections(analysis);
 
-    let analysis = "";
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta?.content ?? "";
-      analysis += delta;
+    if (missingSections.length > 0) {
+      throw new Error(`Análise incompleta: faltam as seções ${missingSections.join(", ")}`);
     }
 
     await db
