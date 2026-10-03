@@ -9,7 +9,7 @@ import {
   ListConversationsResponse,
   GetConversationResponse,
 } from "@workspace/api-zod";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { getDirectOpenAIClient } from "@workspace/integrations-openai-ai-server";
 import { ASSENCE_SYSTEM_PROMPT } from "../lib/assence";
 
 const router: IRouter = Router();
@@ -115,7 +115,7 @@ router.post(
     res.setHeader("Connection", "keep-alive");
 
     let fullResponse = "";
-    const stream = await openai.chat.completions.create({
+    const stream = await getDirectOpenAIClient().chat.completions.create({
       model: "gpt-5.4",
       max_completion_tokens: 8192,
       messages: [
