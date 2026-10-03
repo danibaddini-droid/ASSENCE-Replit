@@ -194,6 +194,31 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /readings/{id}/transits/regenerate:
+    post:
+      operationId: regenerateTransitAnalysis
+      tags: [readings]
+      summary: Generate a separate AI analysis of current astrological transits
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Reading with transit analysis generation started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Reading"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /readings/transits/today:
     get:
       operationId: getDailyTransits
@@ -478,6 +503,10 @@ components:
         analysis:
           type: ["string", "null"]
         analysisStatus:
+          type: string
+        transitAnalysis:
+          type: ["string", "null"]
+        transitAnalysisStatus:
           type: string
         clientAge:
           type: ["integer", "null"]

@@ -135,11 +135,7 @@ Ao final de cada seção (planetas, pontos, aspectos), inclua:
 
 **🔬 Laboratório de Integração**: Exercícios práticos (respiração, visualização, rituais simples, sugestões de movimento).
 
-**💬 O Poder do Verbo**: Uma afirmação curta e potente para reprogramação mental.
-
 **🪞 Reflexão**: Duas questões práticas de reflexão relacionadas à posição.
-
-**💛 Conselho de Ouro**: Um conselho direto e específico para o consulente.
 
 ---
 
@@ -160,6 +156,32 @@ A narrativa da alma: de onde vem, para onde vai, quais são os presentes e os de
 - Evite "bom" ou "mau" — use "desafiador", "potencializador", "ponto de tensão"
 - Tom: perspicaz, direto, inteligente, com humor ácido e sagacidade quando cabível
 - Nunca use emojis fora do sistema definido acima`;
+
+/** Removes legacy delivery blocks from analyses generated before the current format. */
+export function sanitizeAnalysis(markdown: string): string {
+  const lines = markdown.split("\n");
+  const output: string[] = [];
+  let skipping = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const isAffirmation = /^\*\*💬\s*O Poder do Verbo\*\*/i.test(trimmed);
+    const isAdvice = /^\*\*💛\s*Conselho de Ouro\*\*/i.test(trimmed);
+    const isReflection = /^\*\*🪞\s*Reflexão\*\*/i.test(trimmed);
+    const isHeading = /^#{1,6}\s+/.test(trimmed);
+
+    if (isAffirmation || isAdvice) {
+      skipping = true;
+      continue;
+    }
+    if (skipping && (isReflection || isHeading)) {
+      skipping = false;
+    }
+    if (!skipping) output.push(line);
+  }
+
+  return output.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
 
 interface PlanetPosition {
   sign: string;
@@ -255,5 +277,5 @@ POSIÇÕES PLANETÁRIAS${data.ephemerisCalculated ? " (calculadas via efeméride
 ${planetLines.join("\n")}
 ${aspectLines}
 
-Realize a análise completa conforme as diretrizes do método Assence, seguindo a estrutura obrigatória com todos os combos de entrega (análise da alma do planeta, Laboratório de Integração, Poder do Verbo, Reflexão e Conselho de Ouro) para cada posição.`;
+Realize a análise completa conforme as diretrizes do método Assence, seguindo a estrutura obrigatória com análise da alma, Laboratório de Integração e Reflexão para cada posição. Não inclua afirmações, "Poder do Verbo", "Conselho de Ouro" ou seções equivalentes.`;
 }

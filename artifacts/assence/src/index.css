@@ -2,6 +2,22 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
+@font-face {
+  font-family: "Dosis";
+  src: url("./assets/fonts/dosis-regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Dosis";
+  src: url("./assets/fonts/dosis-semibold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -106,7 +122,7 @@
   --chart-4: 180 60% 50%;
   --chart-5: 15 70% 60%;
 
-  --app-font-sans: 'Plus Jakarta Sans', sans-serif;
+  --app-font-sans: "Dosis", sans-serif;
   --app-font-serif: 'Cormorant Garamond', serif;
   --app-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   

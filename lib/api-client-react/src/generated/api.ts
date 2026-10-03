@@ -706,6 +706,90 @@ export const useRegenerateReading = <
 };
 
 /**
+ * @summary Generate a separate AI analysis of current astrological transits
+ */
+export const getRegenerateTransitAnalysisUrl = (id: number) => {
+  return `/api/readings/${id}/transits/regenerate`;
+};
+
+export const regenerateTransitAnalysis = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Reading> => {
+  return customFetch<Reading>(getRegenerateTransitAnalysisUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRegenerateTransitAnalysisMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof regenerateTransitAnalysis>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof regenerateTransitAnalysis>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["regenerateTransitAnalysis"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof regenerateTransitAnalysis>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return regenerateTransitAnalysis(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RegenerateTransitAnalysisMutationResult = NonNullable<
+  Awaited<ReturnType<typeof regenerateTransitAnalysis>>
+>;
+
+export type RegenerateTransitAnalysisMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Generate a separate AI analysis of current astrological transits
+ */
+export const useRegenerateTransitAnalysis = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof regenerateTransitAnalysis>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof regenerateTransitAnalysis>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getRegenerateTransitAnalysisMutationOptions(options));
+};
+
+/**
  * @summary Get today's planetary transits and most activated clients
  */
 export const getGetDailyTransitsUrl = () => {

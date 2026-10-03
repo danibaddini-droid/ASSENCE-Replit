@@ -26,6 +26,8 @@ export const ListReadingsResponseItem = zod.object({
   birthChart: zod.object({}).passthrough(),
   analysis: zod.string().nullish(),
   analysisStatus: zod.string(),
+  transitAnalysis: zod.string().nullish(),
+  transitAnalysisStatus: zod.string().optional(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
   deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
@@ -205,6 +207,8 @@ export const GetReadingResponse = zod.object({
   birthChart: zod.object({}).passthrough(),
   analysis: zod.string().nullish(),
   analysisStatus: zod.string(),
+  transitAnalysis: zod.string().nullish(),
+  transitAnalysisStatus: zod.string().optional(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
   deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
@@ -234,6 +238,8 @@ export const UpdateReadingResponse = zod.object({
   birthChart: zod.object({}).passthrough(),
   analysis: zod.string().nullish(),
   analysisStatus: zod.string(),
+  transitAnalysis: zod.string().nullish(),
+  transitAnalysisStatus: zod.string().optional(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
   deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
@@ -274,6 +280,8 @@ export const RecalculateReadingResponse = zod.object({
   birthChart: zod.object({}).passthrough(),
   analysis: zod.string().nullish(),
   analysisStatus: zod.string(),
+  transitAnalysis: zod.string().nullish(),
+  transitAnalysisStatus: zod.string().optional(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
   deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
@@ -298,6 +306,34 @@ export const RegenerateReadingResponse = zod.object({
   birthChart: zod.object({}).passthrough(),
   analysis: zod.string().nullish(),
   analysisStatus: zod.string(),
+  transitAnalysis: zod.string().nullish(),
+  transitAnalysisStatus: zod.string().optional(),
+  clientAge: zod.number().nullish(),
+  clientEmail: zod.string().nullish(),
+  deliveryStatus: zod.enum(["pending", "delivered"]).optional(),
+  notes: zod.string().nullish(),
+  createdAt: zod.string(),
+  updatedAt: zod.string(),
+});
+
+/**
+ * @summary Generate a separate AI analysis of current astrological transits
+ */
+export const RegenerateTransitAnalysisParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const RegenerateTransitAnalysisResponse = zod.object({
+  id: zod.number(),
+  clientName: zod.string(),
+  birthDate: zod.string(),
+  birthTime: zod.string().nullish(),
+  birthPlace: zod.string(),
+  birthChart: zod.object({}).passthrough(),
+  analysis: zod.string().nullish(),
+  analysisStatus: zod.string(),
+  transitAnalysis: zod.string().nullish(),
+  transitAnalysisStatus: zod.string().optional(),
   clientAge: zod.number().nullish(),
   clientEmail: zod.string().nullish(),
   deliveryStatus: zod.enum(["pending", "delivered"]).optional(),

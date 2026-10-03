@@ -2,6 +2,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { PLANETS } from "./constants";
 import type { Reading } from "@workspace/api-zod";
+import dosisRegularUrl from "@/assets/fonts/dosis-regular.ttf?url";
+import dosisSemiboldUrl from "@/assets/fonts/dosis-semibold.ttf?url";
 
 const GOLD = [180, 140, 60] as const;
 const DARK = [15, 12, 30] as const;
@@ -21,6 +23,8 @@ function formatBirthDate(dateStr: string): string {
 
 function stripMarkdown(md: string): string {
   return md
+    .replace(/\n*\*\*💬 O Poder do Verbo\*\*[\s\S]*?(?=\n+\*\*🪞 Reflexão\*\*|\n+#{1,6}\s|$)/g, "")
+    .replace(/\n*\*\*💛 Conselho de Ouro\*\*[\s\S]*?(?=\n+#{1,6}\s|$)/g, "")
     .replace(/#{1,6}\s+(.+)/g, (_, t) => `\n${t.toUpperCase()}\n`)
     .replace(/\*\*(.+?)\*\*/g, "$1")
     .replace(/\*(.+?)\*/g, "$1")
@@ -31,6 +35,20 @@ function stripMarkdown(md: string): string {
     .replace(/\[(.+?)\]\(.+?\)/g, "$1")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+async function fontAsBase64(url: string): Promise<string> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Não foi possível carregar a fonte Dosis (${response.status})`);
+  }
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
 }
 
 function parseMarkdownSections(md: string): { heading: string | null; body: string }[] {
@@ -59,6 +77,15 @@ function parseMarkdownSections(md: string): { heading: string | null; body: stri
 
 export async function exportReadingPDF(reading: Reading): Promise<void> {
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  const [dosisRegular, dosisSemibold] = await Promise.all([
+    fontAsBase64(dosisRegularUrl),
+    fontAsBase64(dosisSemiboldUrl),
+  ]);
+  doc.addFileToVFS("Dosis-Regular.ttf", dosisRegular);
+  doc.addFont("Dosis-Regular.ttf", "Dosis", "normal");
+  doc.addFileToVFS("Dosis-Semibold.ttf", dosisSemibold);
+  doc.addFont("Dosis-Semibold.ttf", "Dosis", "bold");
+  const PDF_FONT = "Dosis";
   const W = doc.internal.pageSize.getWidth();
   const H = doc.internal.pageSize.getHeight();
   const margin = 18;
@@ -85,7 +112,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   function addFooter(pageNum: number, totalPages: number) {
     doc.setFillColor(...DARK);
     doc.rect(0, H - 12, W, 12, "F");
-    doc.setFont("helvetica", "normal");
+    doc.setFont(PDF_FONT, "normal");
     doc.setFontSize(7);
     doc.setTextColor(...GOLD);
     doc.text("Assence — Inteligência Astrológica", margin, H - 4.5);
@@ -110,12 +137,12 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   doc.circle(margin + 5, 20, 1.2, "F");
 
   // "ASSENCE" heading
-  doc.setFont("helvetica", "bold");
+  doc.setFont(PDF_FONT, "bold");
   doc.setFontSize(13);
   doc.setTextColor(...GOLD);
   doc.text("ASSENCE", margin + 13, 18);
 
-  doc.setFont("helvetica", "normal");
+  doc.setFont(PDF_FONT, "normal");
   doc.setFontSize(7);
   doc.setTextColor(180, 165, 210);
   doc.text("INTELIGÊNCIA ASTROLÓGICA", margin + 13, 24);
@@ -131,13 +158,13 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   );
 
   // Client name
-  doc.setFont("helvetica", "bold");
+  doc.setFont(PDF_FONT, "bold");
   doc.setFontSize(26);
   doc.setTextColor(...TEXT);
   doc.text(reading.clientName, margin, 72);
 
   // Subtitle
-  doc.setFont("helvetica", "normal");
+   doc.setFont(PDF_FONT, "normal");
   doc.setFontSize(9);
   doc.setTextColor(...MUTED);
   const subtitleParts: string[] = [formatBirthDate(reading.birthDate)];
@@ -166,11 +193,11 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
     doc.roundedRect(x, y, cardW, 22, 2, 2, "F");
     doc.setFillColor(...GOLD);
     doc.rect(x, y, cardW, 1.5, "F");
-    doc.setFont("helvetica", "normal");
+    doc.setFont(PDF_FONT, "normal");
     doc.setFontSize(6);
     doc.setTextColor(...GOLD);
     doc.text(card.label, x + cardW / 2, y + 7, { align: "center" });
-    doc.setFont("helvetica", "bold");
+    doc.setFont(PDF_FONT, "bold");
     doc.setFontSize(8.5);
     doc.setTextColor(...CREAM);
     const lines = doc.splitTextToSize(card.value, cardW - 4);
@@ -184,7 +211,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   // ─── Planet table ──────────────────────────────────────────────────────────
   let yPos = 124;
 
-  doc.setFont("helvetica", "bold");
+     doc.setFont(PDF_FONT, "bold");
   doc.setFontSize(10);
   doc.setTextColor(...DARK);
   doc.text("Posições Planetárias", margin, yPos);
@@ -213,7 +240,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
     margin: { left: margin, right: margin },
     tableWidth: contentW,
     styles: {
-      font: "helvetica",
+      font: PDF_FONT,
       fontSize: 8,
       cellPadding: 3,
       textColor: [...TEXT],
@@ -253,7 +280,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
       cuspsY = margin + 10;
     }
 
-    doc.setFont("helvetica", "bold");
+     doc.setFont(PDF_FONT, "bold");
     doc.setFontSize(10);
     doc.setTextColor(...DARK);
     doc.text("Cúspides das Casas (Placidus)", margin, cuspsY);
@@ -274,7 +301,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
       margin: { left: margin, right: margin },
       tableWidth: contentW / 2,
       styles: {
-        font: "helvetica",
+        font: PDF_FONT,
         fontSize: 8,
         cellPadding: 2.5,
         textColor: [...TEXT],
@@ -292,7 +319,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
       columnStyles: {
         0: { fontStyle: "bold", cellWidth: 20, textColor: [...GOLD] },
         1: { cellWidth: 40 },
-        2: { cellWidth: 22, halign: "right", font: "courier", fontSize: 7.5 },
+        2: { cellWidth: 22, halign: "right", font: PDF_FONT, fontSize: 7.5 },
       },
     });
   }
@@ -309,7 +336,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
       aspectsY = margin + 10;
     }
 
-    doc.setFont("helvetica", "bold");
+    doc.setFont(PDF_FONT, "bold");
     doc.setFontSize(10);
     doc.setTextColor(...DARK);
     doc.text(`Aspectos  (${aspects.length})`, margin, aspectsY);
@@ -353,7 +380,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
       const glyph = ASPECT_GLYPHS[type] ?? "";
 
       // Type group header
-      doc.setFont("helvetica", "bold");
+      doc.setFont(PDF_FONT, "bold");
       doc.setFontSize(8.5);
       doc.setTextColor(...(typeColor as [number, number, number]));
       doc.text(`${glyph}  ${type}  (${rows.length})`, margin, tableY);
@@ -366,7 +393,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
         margin: { left: margin, right: margin },
         tableWidth: contentW,
         styles: {
-          font: "helvetica",
+          font: PDF_FONT,
           fontSize: 8,
           cellPadding: 2.5,
           textColor: [...TEXT],
@@ -408,16 +435,16 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
     doc.rect(0, 52, W, 1.2, "F");
 
     // Mini header
-    doc.setFont("helvetica", "bold");
+    doc.setFont(PDF_FONT, "bold");
     doc.setFontSize(8);
     doc.setTextColor(...GOLD);
     doc.text("ASSENCE", margin, 20);
-    doc.setFont("helvetica", "normal");
+    doc.setFont(PDF_FONT, "normal");
     doc.setFontSize(7);
     doc.setTextColor(180, 165, 210);
     doc.text(reading.clientName, margin, 26);
 
-    doc.setFont("helvetica", "bold");
+    doc.setFont(PDF_FONT, "bold");
     doc.setFontSize(14);
     doc.setTextColor(...TEXT);
     doc.text("Análise Astrológica", margin, 65);
@@ -428,9 +455,9 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
 
     const sections = parseMarkdownSections(reading.analysis);
     let y = 78;
-    const lineH = 5;
-    const sectionGap = 5;
-    const headingGap = 3;
+    const lineH = 5.2;
+    const sectionGap = 5.2;
+    const headingGap = 3.2;
     const pageBottom = H - 18;
 
     for (const section of sections) {
@@ -441,7 +468,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
           addPageBackground();
           y = margin + 8;
         }
-        doc.setFont("helvetica", "bold");
+        doc.setFont(PDF_FONT, "bold");
         doc.setFontSize(10);
         doc.setTextColor(...GOLD);
         doc.text(section.heading, margin, y);
@@ -454,7 +481,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
 
       if (section.body.trim()) {
         const cleanBody = stripMarkdown(section.body);
-        doc.setFont("helvetica", "normal");
+        doc.setFont(PDF_FONT, "normal");
         doc.setFontSize(8.5);
         doc.setTextColor(...TEXT);
 
@@ -468,15 +495,18 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
               addPageBackground();
               y = margin + 8;
               // repeat mini header on continuation pages
-              doc.setFont("helvetica", "bold");
+              doc.setFont(PDF_FONT, "bold");
               doc.setFontSize(8);
               doc.setTextColor(...GOLD);
               doc.text("ASSENCE", margin, 12);
-              doc.setFont("helvetica", "normal");
+              doc.setFont(PDF_FONT, "normal");
               doc.setFontSize(8.5);
               doc.setTextColor(...TEXT);
             }
-            doc.text(line, margin, y);
+            const isLastLine = line === wrapped[wrapped.length - 1];
+            doc.text(line, margin, y, isLastLine
+              ? undefined
+              : { align: "justify", maxWidth: contentW });
             y += lineH;
           }
           y += 2; // paragraph gap

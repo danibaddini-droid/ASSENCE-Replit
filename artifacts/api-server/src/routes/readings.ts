@@ -12,7 +12,7 @@ import {
   GetReadingsStatsResponse,
 } from "@workspace/api-zod";
 import { openai } from "@workspace/integrations-openai-ai-server";
-import { ASSENCE_SYSTEM_PROMPT, buildChartPrompt } from "../lib/assence";
+import { ASSENCE_SYSTEM_PROMPT, buildChartPrompt, sanitizeAnalysis } from "../lib/assence";
 import { calculateBirthChart, calculateTodayTransits } from "../lib/ephemeris";
 import { sendNewClientNotification } from "../lib/email";
 
@@ -156,6 +156,20 @@ const ANALYSIS_BLOCKS = [
   { start: 21, end: 27 },
 ] as const;
 
+const TRANSIT_SYSTEM_PROMPT = `Você é a Assence, uma inteligência astrológica de elite.
+Analise exclusivamente os trânsitos astrológicos atuais em relação ao mapa natal fornecido.
+Escreva em português brasileiro, com linguagem psicológica, concreta e não determinista.
+Não faça a análise natal completa novamente. Não inclua "O Poder do Verbo", afirmações,
+"Conselho de Ouro" ou conselhos equivalentes. Organize a resposta com:
+# Trânsitos Astrológicos do Dia
+## Clima geral
+## Trânsitos mais relevantes
+## Áreas da vida ativadas
+## Recomendações de integração
+Use os planetas, signos, graus, casas e aspectos fornecidos nos dados, explicando
+o que está sendo ativado, a qualidade da oportunidade ou tensão e como trabalhar
+conscientemente com cada trânsito.`;
+
 function missingSectionsInRange(markdown: string, start: number, end: number): number[] {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index).filter(
     (number) => !new RegExp(`^#\\s+${number}\\.`, "m").test(markdown),
@@ -175,6 +189,59 @@ async function requestAnalysis(messages: AnalysisMessage[]): Promise<string> {
     content += chunk.choices[0]?.delta?.content ?? "";
   }
   return content;
+}
+
+async function generateTransitAnalysis(readingId: number, reading: typeof readingsTable.$inferSelect) {
+  try {
+    await db
+      .update(readingsTable)
+      .set({ transitAnalysisStatus: "generating", updatedAt: new Date() })
+      .where(eq(readingsTable.id, readingId));
+
+    const allReadings = await db.select().from(readingsTable);
+    const transitResult = calculateTodayTransits(
+      allReadings.map((item) => ({
+        id: item.id,
+        clientName: item.clientName,
+        birthChart: item.birthChart,
+      })),
+    );
+    const clientTransit = transitResult.activatedClients.find((item) => item.readingId === readingId);
+    const userPrompt = `MAPA NATAL:
+${JSON.stringify(reading.birthChart, null, 2)}
+
+DATA DOS TRÂNSITOS: ${transitResult.date}
+POSIÇÕES DOS TRÂNSITOS:
+${transitResult.planets.map((planet) => `${planet.name}: ${planet.sign} ${planet.degree.toFixed(1)}°${planet.retrograde ? " (retrógrado)" : ""}`).join("\n")}
+
+ASPECTOS DOS TRÂNSITOS COM O MAPA NATAL:
+${clientTransit?.transits?.length
+  ? clientTransit.transits.map((item) => `${item.transitPlanet} ${item.type} ${item.natalPlanet} (orbe ${item.orb}°)`).join("\n")
+  : "Nenhum aspecto dentro do orbe de 3° foi identificado hoje."}
+
+Nome: ${reading.clientName}
+Produza a análise separada dos trânsitos seguindo exatamente a estrutura indicada no sistema.`;
+
+    const analysis = (await requestAnalysis([
+      { role: "system", content: TRANSIT_SYSTEM_PROMPT },
+      { role: "user", content: userPrompt },
+    ])).trim();
+
+    if (!analysis || !analysis.includes("Trânsitos Astrológicos")) {
+      throw new Error("Análise de trânsitos retornou conteúdo incompleto");
+    }
+
+    await db
+      .update(readingsTable)
+      .set({ transitAnalysis: analysis, transitAnalysisStatus: "completed", updatedAt: new Date() })
+      .where(eq(readingsTable.id, readingId));
+  } catch (err) {
+    await db
+      .update(readingsTable)
+      .set({ transitAnalysisStatus: "error", updatedAt: new Date() })
+      .where(eq(readingsTable.id, readingId));
+    throw err;
+  }
 }
 
 async function generateAnalysisBlock(
@@ -200,9 +267,8 @@ Cada seção deve ser desenvolvida com profundidade, usando os dados reais do ma
 Para cada seção aplicável, inclua o Combo de Entrega completo:
 **✨** Análise da alma
 **🔬 Laboratório de Integração**
-**💬 O Poder do Verbo**
 **🪞 Reflexão**
-**💛 Conselho de Ouro**
+Não inclua "Poder do Verbo", afirmações, "Conselho de Ouro" ou conselhos equivalentes.
 Não faça um resumo superficial e não finalize a resposta antes de concluir a última seção solicitada.${finalSynthesis}`;
 
   let result = await requestAnalysis([
@@ -218,7 +284,7 @@ Não faça um resumo superficial e não finalize a resposta antes de concluir a 
       { role: "assistant", content: result },
       {
         role: "user",
-        content: `Complete agora somente as seções ausentes ${missing.join(", ")}. Comece cada uma exatamente com "# N. Título", desenvolva a análise e inclua o Combo de Entrega completo. Não repita as seções já concluídas.`,
+        content: `Complete agora somente as seções ausentes ${missing.join(", ")}. Comece cada uma exatamente com "# N. Título", desenvolva a análise e inclua apenas: **✨** Análise da alma, **🔬 Laboratório de Integração** e **🪞 Reflexão**. Não inclua Poder do Verbo, afirmações, Conselho de Ouro ou equivalentes. Não repita as seções já concluídas.`,
       },
     ]);
     missing = missingSectionsInRange(result, start, end);
@@ -262,7 +328,7 @@ async function generateAnalysis(
         ),
       ),
     );
-    const analysis = blockResults.join("\n\n");
+    const analysis = sanitizeAnalysis(blockResults.join("\n\n"));
     const missingSections = missingAnalysisSections(analysis);
 
     if (missingSections.length > 0) {
@@ -348,6 +414,35 @@ router.post("/readings/:id/regenerate", async (req, res): Promise<void> => {
     ephemerisCalculated: !!(reading.birthChart as Record<string, unknown>)?.ascendant,
   }).catch((err) => {
     req.log.error({ err, readingId: reading.id }, "Failed to regenerate analysis");
+  });
+});
+
+router.post("/readings/:id/transits/regenerate", async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const id = parseInt(raw, 10);
+  if (isNaN(id)) {
+    res.status(400).json({ error: "Invalid ID" });
+    return;
+  }
+
+  const [reading] = await db.select().from(readingsTable).where(eq(readingsTable.id, id));
+  if (!reading) {
+    res.status(404).json({ error: "Reading not found" });
+    return;
+  }
+
+  await db
+    .update(readingsTable)
+    .set({ transitAnalysisStatus: "generating", updatedAt: new Date() })
+    .where(eq(readingsTable.id, id));
+
+  res.json(GetReadingResponse.parse(serializeDates({
+    ...reading,
+    transitAnalysisStatus: "generating",
+  })));
+
+  generateTransitAnalysis(id, reading).catch((err) => {
+    req.log.error({ err, readingId: id }, "Failed to generate transit analysis");
   });
 });
 

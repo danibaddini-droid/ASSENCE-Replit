@@ -20,6 +20,9 @@ export interface Reading {
   analysis?: string | null;
   analysisStatus: string;
   /** @nullable */
+  transitAnalysis?: string | null;
+  transitAnalysisStatus?: string;
+  /** @nullable */
   clientAge?: number | null;
   /** @nullable */
   clientEmail?: string | null;

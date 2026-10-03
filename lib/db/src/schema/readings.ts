@@ -11,6 +11,8 @@ export const readingsTable = pgTable("readings", {
   birthChart: json("birth_chart").notNull(),
   analysis: text("analysis"),
   analysisStatus: text("analysis_status").notNull().default("pending"),
+  transitAnalysis: text("transit_analysis"),
+  transitAnalysisStatus: text("transit_analysis_status").notNull().default("pending"),
   clientAge: integer("client_age"),
   clientEmail: text("client_email"),
   deliveryStatus: text("delivery_status").notNull().default("pending"),

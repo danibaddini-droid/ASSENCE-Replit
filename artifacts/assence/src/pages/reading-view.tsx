@@ -4,9 +4,11 @@ import {
   useGetReading,
   getGetReadingQueryKey,
   useCreateConversation,
+  useDeleteReading,
   useUpdateReading,
   useRecalculateReading,
   useRegenerateReading,
+  useRegenerateTransitAnalysis,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download, NotebookPen, Save, Globe, Send, CheckCheck } from "lucide-react";
+import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download, NotebookPen, Save, Globe, Send, CheckCheck, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -76,6 +78,12 @@ function StatusBadge({ status }: { status: string }) {
   }
 }
 
+function withoutAffirmationAndAdvice(markdown: string): string {
+  return markdown
+    .replace(/\n*\*\*💬 O Poder do Verbo\*\*[\s\S]*?(?=\n+\*\*🪞 Reflexão\*\*|\n+#{1,6}\s|$)/g, "")
+    .replace(/\n*\*\*💛 Conselho de Ouro\*\*[\s\S]*?(?=\n+#{1,6}\s|$)/g, "");
+}
+
 export default function ReadingView() {
   const { id } = useParams<{ id: string }>();
   const readingId = parseInt(id ?? "0", 10);
@@ -83,9 +91,11 @@ export default function ReadingView() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const createConversation = useCreateConversation();
+  const deleteReading = useDeleteReading();
   const updateReading = useUpdateReading();
   const recalculateReading = useRecalculateReading();
   const regenerateReading = useRegenerateReading();
+  const regenerateTransitAnalysis = useRegenerateTransitAnalysis();
   const [exporting, setExporting] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
   const [togglingDelivery, setTogglingDelivery] = useState(false);
@@ -95,6 +105,7 @@ export default function ReadingView() {
   const [recalcDialogOpen, setRecalcDialogOpen] = useState(false);
   const [recalcTz, setRecalcTz] = useState(TZ_AUTO);
   const [recalculating, setRecalculating] = useState(false);
+  const [generatingTransits, setGeneratingTransits] = useState(false);
 
   const { data: reading, isLoading } = useGetReading(readingId, {
     query: {
@@ -102,7 +113,11 @@ export default function ReadingView() {
       refetchInterval: (query) => {
         const data = query.state.data;
         if (!data) return false;
-        if (data.analysisStatus === "generating" || data.analysisStatus === "pending") return 3000;
+         if (
+           data.analysisStatus === "generating" ||
+           data.analysisStatus === "pending" ||
+           data.transitAnalysisStatus === "generating"
+         ) return 3000;
         return false;
       },
     },
@@ -184,6 +199,35 @@ export default function ReadingView() {
       toast({ title: "Erro ao regerar análise", variant: "destructive" });
     } finally {
       setRegenerating(false);
+    }
+  }
+
+  async function handleGenerateTransitAnalysis() {
+    if (!reading) return;
+    setGeneratingTransits(true);
+    try {
+      await regenerateTransitAnalysis.mutateAsync({ id: reading.id });
+      await queryClient.invalidateQueries({ queryKey: getGetReadingQueryKey(readingId) });
+      toast({
+        title: "Análise dos trânsitos em geração",
+        description: "A leitura dos trânsitos atuais será exibida nesta página quando terminar.",
+      });
+    } catch {
+      toast({ title: "Erro ao gerar análise dos trânsitos", variant: "destructive" });
+    } finally {
+      setGeneratingTransits(false);
+    }
+  }
+
+  async function handleDeleteReading() {
+    if (!reading) return;
+    if (!confirm(`Excluir definitivamente o mapa de ${reading.clientName}? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await deleteReading.mutateAsync({ id: reading.id });
+      toast({ title: "Mapa excluído" });
+      navigate("/mapas");
+    } catch {
+      toast({ title: "Erro ao excluir o mapa", variant: "destructive" });
     }
   }
 
@@ -338,6 +382,17 @@ export default function ReadingView() {
               </Button>
             </>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDeleteReading}
+            disabled={deleteReading.isPending}
+            className="h-8 px-2.5 text-xs text-destructive border border-destructive/30 hover:bg-destructive/10"
+            title="Excluir este mapa definitivamente"
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+            Excluir mapa
+          </Button>
         </div>
       </div>
 
@@ -377,6 +432,59 @@ export default function ReadingView() {
               );
             })}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-primary/25 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="border-b border-border/50">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle className="font-sans text-xl flex items-center gap-2">
+                <Globe className="h-5 w-5 text-primary" />
+                Análise dos Trânsitos Astrológicos
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Leitura separada das ativações atuais sobre o mapa natal.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              onClick={handleGenerateTransitAnalysis}
+              disabled={generatingTransits || reading.transitAnalysisStatus === "generating"}
+              className="border-primary/40 text-primary hover:bg-primary/10"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${(generatingTransits || reading.transitAnalysisStatus === "generating") ? "animate-spin" : ""}`} />
+              {generatingTransits || reading.transitAnalysisStatus === "generating"
+                ? "Gerando trânsitos…"
+                : reading.transitAnalysisStatus === "completed"
+                  ? "Atualizar trânsitos"
+                  : "Gerar análise dos trânsitos"}
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 md:p-8">
+          {reading.transitAnalysisStatus === "generating" ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <RefreshCw className="h-8 w-8 mb-3 animate-spin opacity-50" />
+              <p>A inteligência astrológica está analisando os trânsitos atuais…</p>
+            </div>
+          ) : reading.transitAnalysisStatus === "error" ? (
+            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+              <AlertCircle className="h-8 w-8 mb-3 text-destructive opacity-70" />
+              <p>Não foi possível gerar a análise dos trânsitos.</p>
+              <p className="text-sm mt-1">Clique novamente para tentar.</p>
+            </div>
+          ) : reading.transitAnalysis ? (
+            <div className="prose prose-invert prose-headings:font-sans prose-headings:text-primary prose-p:text-foreground/90 prose-p:leading-relaxed max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {withoutAffirmationAndAdvice(reading.transitAnalysis)}
+              </ReactMarkdown>
+            </div>
+          ) : (
+            <div className="text-center py-10 text-muted-foreground">
+              <p>A análise dos trânsitos ainda não foi gerada.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -437,7 +545,7 @@ export default function ReadingView() {
           ) : reading.analysis ? (
             <div className="prose prose-invert prose-headings:font-sans prose-headings:text-primary prose-p:text-foreground/90 prose-p:leading-relaxed prose-code:text-primary prose-code:bg-primary/10 prose-pre:bg-background/50 prose-blockquote:border-primary/40 prose-blockquote:text-muted-foreground max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {reading.analysis}
+                {withoutAffirmationAndAdvice(reading.analysis)}
               </ReactMarkdown>
             </div>
           ) : (
