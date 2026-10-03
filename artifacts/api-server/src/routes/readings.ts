@@ -11,7 +11,7 @@ import {
   GetReadingResponse,
   GetReadingsStatsResponse,
 } from "@workspace/api-zod";
-import { getDirectOpenAIClient } from "@workspace/integrations-openai-ai-server";
+import { openai } from "@workspace/integrations-openai-ai-server";
 import { ASSENCE_SYSTEM_PROMPT, buildChartPrompt, sanitizeAnalysis } from "../lib/assence";
 import { calculateBirthChart, calculateTodayTransits } from "../lib/ephemeris";
 import { sendNewClientNotification } from "../lib/email";
@@ -177,7 +177,7 @@ function missingSectionsInRange(markdown: string, start: number, end: number): n
 }
 
 async function requestAnalysis(messages: AnalysisMessage[]): Promise<string> {
-  const stream = await getDirectOpenAIClient().chat.completions.create({
+  const stream = await openai.chat.completions.create({
     model: "gpt-5.4",
     max_completion_tokens: 16000,
     stream: true,
