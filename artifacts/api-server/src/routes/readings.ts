@@ -11,10 +11,10 @@ import {
   GetReadingResponse,
   GetReadingsStatsResponse,
 } from "@workspace/api-zod";
-import { openai } from "@workspace/integrations-openai-ai-server";
 import { ASSENCE_SYSTEM_PROMPT, buildChartPrompt, sanitizeAnalysis } from "../lib/assence";
 import { calculateBirthChart, calculateTodayTransits } from "../lib/ephemeris";
 import { sendNewClientNotification } from "../lib/email";
+import { streamGeminiText } from "../lib/gemini";
 
 const router: IRouter = Router();
 
@@ -177,16 +177,9 @@ function missingSectionsInRange(markdown: string, start: number, end: number): n
 }
 
 async function requestAnalysis(messages: AnalysisMessage[]): Promise<string> {
-  const stream = await openai.chat.completions.create({
-    model: "gpt-5.4",
-    max_completion_tokens: 16000,
-    stream: true,
-    messages,
-  });
-
   let content = "";
-  for await (const chunk of stream) {
-    content += chunk.choices[0]?.delta?.content ?? "";
+  for await (const text of streamGeminiText(messages, 16000)) {
+    content += text;
   }
   return content;
 }

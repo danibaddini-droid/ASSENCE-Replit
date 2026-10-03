@@ -9,8 +9,8 @@ import {
   ListConversationsResponse,
   GetConversationResponse,
 } from "@workspace/api-zod";
-import { openai } from "@workspace/integrations-openai-ai-server";
 import { ASSENCE_SYSTEM_PROMPT } from "../lib/assence";
+import { streamGeminiText } from "../lib/gemini";
 
 const router: IRouter = Router();
 
@@ -115,25 +115,18 @@ router.post(
     res.setHeader("Connection", "keep-alive");
 
     let fullResponse = "";
-    const stream = await openai.chat.completions.create({
-      model: "gpt-5.4",
-      max_completion_tokens: 8192,
-      messages: [
+    for await (const content of streamGeminiText(
+      [
         { role: "system", content: ASSENCE_SYSTEM_PROMPT },
         ...allMessages.map((m) => ({
           role: m.role as "user" | "assistant",
           content: m.content,
         })),
       ],
-      stream: true,
-    });
-
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        fullResponse += content;
-        res.write(`data: ${JSON.stringify({ content })}\n\n`);
-      }
+      8192,
+    )) {
+      fullResponse += content;
+      res.write(`data: ${JSON.stringify({ content })}\n\n`);
     }
 
     await db.insert(messagesTable).values({
