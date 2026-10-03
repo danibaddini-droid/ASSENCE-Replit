@@ -176,6 +176,17 @@ function missingSectionsInRange(markdown: string, start: number, end: number): n
   );
 }
 
+function normalizeMainSectionHeadings(markdown: string, start: number, end: number): string {
+  return markdown.replace(
+    /^#{1,6}\s*(\d+)(?!\d|\.\d)(?:[ \t]*[.):\-–—][ \t]*|[ \t]+)([^\n]*)$/gm,
+    (heading, numberText: string, title: string) => {
+      const number = Number(numberText);
+      if (number < start || number > end) return heading;
+      return `# ${number}. ${title.trim()}`;
+    },
+  );
+}
+
 async function requestAnalysis(messages: AnalysisMessage[]): Promise<string> {
   let content = "";
   for await (const text of streamGeminiText(messages, 16000)) {
@@ -264,22 +275,41 @@ Para cada seção aplicável, inclua o Combo de Entrega completo:
 Não inclua "Poder do Verbo", afirmações, "Conselho de Ouro" ou conselhos equivalentes.
 Não faça um resumo superficial e não finalize a resposta antes de concluir a última seção solicitada.${finalSynthesis}`;
 
-  let result = await requestAnalysis([
+  let result = normalizeMainSectionHeadings(await requestAnalysis([
     { role: "system", content: ASSENCE_SYSTEM_PROMPT },
     { role: "user", content: blockPrompt },
-  ]);
+  ]), start, end);
 
   let missing = missingSectionsInRange(result, start, end);
-  if (missing.length > 0) {
-    result += await requestAnalysis([
-      { role: "system", content: ASSENCE_SYSTEM_PROMPT },
-      { role: "user", content: blockPrompt },
-      { role: "assistant", content: result },
-      {
-        role: "user",
-        content: `Complete agora somente as seções ausentes ${missing.join(", ")}. Comece cada uma exatamente com "# N. Título", desenvolva a análise e inclua apenas: **✨** Análise da alma, **🔬 Laboratório de Integração** e **🪞 Reflexão**. Não inclua Poder do Verbo, afirmações, Conselho de Ouro ou equivalentes. Não repita as seções já concluídas.`,
-      },
-    ]);
+  for (let attempt = 0; missing.length > 0 && attempt < 2; attempt += 1) {
+    const requiredHeadings = missing
+      .map((number) => {
+        const title = ASSENCE_SYSTEM_PROMPT.match(
+          new RegExp(`^###\\s+${number}\\.\\s+(.+)$`, "m"),
+        )?.[1];
+        return `# ${number}. ${title ?? `Seção ${number}`}`;
+      })
+      .join("\n");
+    const synthesisInstruction =
+      includeFinalSynthesis && missing.includes(27)
+        ? "\nApós a seção 27, inclua também a Visão Integradora Final, com Eixos Principais da Personalidade, Caminho Evolutivo e uma síntese coerente com o mapa."
+        : "";
+    const completionPrompt = `${userPrompt}
+
+Esta análise já tem algumas seções concluídas. Escreva SOMENTE as seções ainda ausentes: ${missing.join(", ")}.
+Comece cada seção com exatamente um dos cabeçalhos abaixo, em nível principal (#), sem alterar a numeração:
+${requiredHeadings}
+Desenvolva cada seção com profundidade, usando os dados reais do mapa. Inclua **✨** Análise da alma, **🔬 Laboratório de Integração** e **🪞 Reflexão** quando aplicável.
+Não inclua Poder do Verbo, afirmações, Conselho de Ouro ou equivalentes. Não repita nenhuma seção já concluída.${synthesisInstruction}`;
+    const completion = normalizeMainSectionHeadings(
+      await requestAnalysis([
+        { role: "system", content: ASSENCE_SYSTEM_PROMPT },
+        { role: "user", content: completionPrompt },
+      ]),
+      start,
+      end,
+    );
+    result = `${result.trim()}\n\n${completion.trim()}`;
     missing = missingSectionsInRange(result, start, end);
   }
 
