@@ -1,1 +1,2 @@
 - [Geração de análises longas](analysis-generation.md) — análises com muitos tópicos devem ser divididas em blocos paralelos e validadas antes de marcar como concluídas.
+- [Provedor Gemini da Assence](gemini-provider.md) — a geração usa a conta Google própria; chaves Standard antigas sem restrição podem ser rejeitadas.
