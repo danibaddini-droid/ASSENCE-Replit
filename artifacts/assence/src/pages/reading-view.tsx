@@ -3,6 +3,8 @@ import { useParams, useLocation } from "wouter";
 import {
   useGetReading,
   getGetReadingQueryKey,
+  useGetDailyTransits,
+  getGetDailyTransitsQueryKey,
   useCreateConversation,
   useDeleteReading,
   useUpdateReading,
@@ -19,6 +21,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MessageCircle, ChevronLeft, Star, MoonStar, Sparkles, RefreshCw, AlertCircle, Download, NotebookPen, Save, Globe, Send, CheckCheck, Trash2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -106,6 +109,7 @@ export default function ReadingView() {
   const [recalcTz, setRecalcTz] = useState(TZ_AUTO);
   const [recalculating, setRecalculating] = useState(false);
   const [generatingTransits, setGeneratingTransits] = useState(false);
+  const [activeMap, setActiveMap] = useState("natal");
 
   const { data: reading, isLoading } = useGetReading(readingId, {
     query: {
@@ -120,6 +124,19 @@ export default function ReadingView() {
          ) return 3000;
         return false;
       },
+    },
+  });
+  const {
+    data: dailyTransits,
+    isLoading: isTransitMapLoading,
+    isError: isTransitMapError,
+    refetch: refetchDailyTransits,
+  } = useGetDailyTransits({
+    query: {
+      queryKey: getGetDailyTransitsQueryKey(),
+      enabled: activeMap !== "natal",
+      staleTime: 5 * 60 * 1000,
+      refetchInterval: activeMap !== "natal" ? 5 * 60 * 1000 : false,
     },
   });
 
@@ -308,7 +325,7 @@ export default function ReadingView() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0 pt-8 justify-end">
-          <StatusBadge status={reading.analysisStatus} />
+          <StatusBadge status={activeMap === "transits" ? (reading.transitAnalysisStatus ?? reading.analysisStatus) : reading.analysisStatus} />
           {reading.deliveryStatus === "delivered" ? (
             <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 font-normal gap-1">
               <CheckCheck className="h-3 w-3" />
@@ -348,14 +365,14 @@ export default function ReadingView() {
             onClick={handleRegenerate}
             disabled={regenerating || reading.analysisStatus === "generating"}
             className="text-muted-foreground hover:text-foreground border border-border/40 hover:border-border/70 h-8 px-2.5 text-xs"
-            title="Regerar análise da IA com as posições atuais"
+            title="Regerar a análise natal com as posições atuais"
           >
             {regenerating || reading.analysisStatus === "generating" ? (
               <Sparkles className="h-3.5 w-3.5 mr-1.5 animate-pulse" />
             ) : (
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
             )}
-            {regenerating || reading.analysisStatus === "generating" ? "Gerando…" : "Regerar Análise"}
+            {regenerating || reading.analysisStatus === "generating" ? "Gerando…" : "Regerar Análise Natal"}
           </Button>
           {reading.analysisStatus === "completed" && (
             <>
@@ -396,165 +413,336 @@ export default function ReadingView() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <InfoCard icon={Star} label="Ascendente" value={chart.ascendant} />
-        <InfoCard icon={MoonStar} label="Meio-do-Céu" value={chart.midheaven} />
-        <InfoCard icon={Sparkles} label="Sol" value={`${chart.sun.sign} • Casa ${chart.sun.house}`} />
-        <InfoCard icon={MoonStar} label="Lua" value={`${chart.moon.sign} • Casa ${chart.moon.house}`} />
-      </div>
+      <Tabs value={activeMap} onValueChange={setActiveMap} className="space-y-6">
+        <TabsList aria-label="Opções de mapa" className="grid w-full max-w-2xl grid-cols-3">
+          <TabsTrigger value="natal" data-testid="tab-map-natal" className="px-1.5 text-xs sm:px-3 sm:text-sm">Mapa natal</TabsTrigger>
+          <TabsTrigger value="transits" data-testid="tab-map-transits" className="px-1.5 text-xs sm:px-3 sm:text-sm">Trânsitos</TabsTrigger>
+          <TabsTrigger value="combined" data-testid="tab-map-combined" className="px-1.5 text-xs sm:px-3 sm:text-sm">Natal + trânsitos</TabsTrigger>
+        </TabsList>
 
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="border-b border-border/50">
-          <CardTitle className="font-sans text-xl flex items-center gap-2">
-            <Star className="h-5 w-5 text-primary" />
-            Planetas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="divide-y divide-border/30">
-            {PLANETS.map((planet) => {
-              const pos = (chart as Record<string, {sign?: string; house?: number; degree?: number; retrograde?: boolean}>)[planet.id];
-              if (!pos?.sign) return null;
-              return (
-                <div key={planet.id} className="flex items-center justify-between px-5 py-3 text-sm">
-                  <span className="text-muted-foreground w-24 shrink-0">{planet.label}</span>
-                  <span className="font-medium flex-1">{pos.sign}</span>
-                  <span className="text-muted-foreground">Casa {pos.house}</span>
-                  {pos.degree !== undefined && (
-                    <span className="text-muted-foreground ml-4 w-16 text-right font-mono text-xs">
-                      {formatDegMin(pos.degree)}
-                    </span>
-                  )}
-                  {pos.retrograde && (
-                    <span className="ml-3 text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">Rx</span>
-                  )}
-                </div>
-              );
-            })}
+        <TabsContent value="natal" className="space-y-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <InfoCard icon={Star} label="Ascendente" value={chart.ascendant} />
+            <InfoCard icon={MoonStar} label="Meio-do-Céu" value={chart.midheaven} />
+            <InfoCard icon={Sparkles} label="Sol" value={`${chart.sun.sign} • Casa ${chart.sun.house}`} />
+            <InfoCard icon={MoonStar} label="Lua" value={`${chart.moon.sign} • Casa ${chart.moon.house}`} />
           </div>
-        </CardContent>
-      </Card>
 
-      <Card className="border-primary/25 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="border-b border-border/50">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="border-b border-border/50">
               <CardTitle className="font-sans text-xl flex items-center gap-2">
-                <Globe className="h-5 w-5 text-primary" />
-                Análise dos Trânsitos Astrológicos
+                <Star className="h-5 w-5 text-primary" />
+                Planetas natais
               </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Leitura separada das ativações atuais sobre o mapa natal.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              onClick={handleGenerateTransitAnalysis}
-              disabled={generatingTransits || reading.transitAnalysisStatus === "generating"}
-              className="border-primary/40 text-primary hover:bg-primary/10"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${(generatingTransits || reading.transitAnalysisStatus === "generating") ? "animate-spin" : ""}`} />
-              {generatingTransits || reading.transitAnalysisStatus === "generating"
-                ? "Gerando trânsitos…"
-                : reading.transitAnalysisStatus === "completed"
-                  ? "Atualizar trânsitos"
-                  : "Gerar análise dos trânsitos"}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6 md:p-8">
-          {reading.transitAnalysisStatus === "generating" ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-              <RefreshCw className="h-8 w-8 mb-3 animate-spin opacity-50" />
-              <p>A inteligência astrológica está analisando os trânsitos atuais…</p>
-            </div>
-          ) : reading.transitAnalysisStatus === "error" ? (
-            <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-              <AlertCircle className="h-8 w-8 mb-3 text-destructive opacity-70" />
-              <p>Não foi possível gerar a análise dos trânsitos.</p>
-              <p className="text-sm mt-1">Clique novamente para tentar.</p>
-            </div>
-          ) : reading.transitAnalysis ? (
-            <div className="prose prose-invert prose-headings:font-sans prose-headings:text-primary prose-p:text-foreground/90 prose-p:leading-relaxed max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {withoutAffirmationAndAdvice(reading.transitAnalysis)}
-              </ReactMarkdown>
-            </div>
-          ) : (
-            <div className="text-center py-10 text-muted-foreground">
-              <p>A análise dos trânsitos ainda não foi gerada.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="divide-y divide-border/30">
+                {PLANETS.map((planet) => {
+                  const pos = (chart as Record<string, {sign?: string; house?: number; degree?: number; retrograde?: boolean}>)[planet.id];
+                  if (!pos?.sign) return null;
+                  return (
+                    <div key={planet.id} data-testid={`row-natal-planet-${planet.id}`} className="flex items-center justify-between px-5 py-3 text-sm">
+                      <span className="text-muted-foreground w-24 shrink-0">{planet.label}</span>
+                      <span className="font-medium flex-1">{pos.sign}</span>
+                      <span className="text-muted-foreground">Casa {pos.house}</span>
+                      {pos.degree !== undefined && (
+                        <span className="text-muted-foreground ml-4 w-16 text-right font-mono text-xs">
+                          {formatDegMin(pos.degree)}
+                        </span>
+                      )}
+                      {pos.retrograde && (
+                        <span className="ml-3 text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded">Rx</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-      {chart.houseCusps && (chart.houseCusps as unknown[]).length > 0 && (
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="border-b border-border/50">
-            <CardTitle className="font-sans text-xl flex items-center gap-2">
-              <Star className="h-5 w-5 text-primary" />
-              Cúspides das Casas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="grid grid-cols-2 md:grid-cols-3 divide-border/30">
-              {(chart.houseCusps as { house: number; sign: string; degrees?: number; minutes?: number }[]).map((cusp) => (
-                <div key={cusp.house} className="flex items-center justify-between px-5 py-3 text-sm border-b border-r border-border/20">
-                  <span className="text-primary font-medium w-16 shrink-0">Casa {cusp.house}</span>
-                  <span className="flex-1 font-medium">{cusp.sign}</span>
-                  <span className="text-muted-foreground font-mono text-xs">
-                    {cusp.degrees ?? 0}°{String(cusp.minutes ?? 0).padStart(2, "0")}'
-                  </span>
+          {chart.houseCusps && (chart.houseCusps as unknown[]).length > 0 && (
+            <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+              <CardHeader className="border-b border-border/50">
+                <CardTitle className="font-sans text-xl flex items-center gap-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  Cúspides das Casas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="grid grid-cols-2 md:grid-cols-3 divide-border/30">
+                  {(chart.houseCusps as { house: number; sign: string; degrees?: number; minutes?: number }[]).map((cusp) => (
+                    <div key={cusp.house} className="flex items-center justify-between px-5 py-3 text-sm border-b border-r border-border/20">
+                      <span className="text-primary font-medium w-16 shrink-0">Casa {cusp.house}</span>
+                      <span className="flex-1 font-medium">{cusp.sign}</span>
+                      <span className="text-muted-foreground font-mono text-xs">
+                        {cusp.degrees ?? 0}°{String(cusp.minutes ?? 0).padStart(2, "0")}'
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {chart.aspects && (chart.aspects as unknown[]).length > 0 && (
-        <AspectsSection aspects={chart.aspects as { planet1: string; planet2: string; type: string; orb: number }[]} />
-      )}
-
-      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-        <CardHeader className="border-b border-border/50">
-          <CardTitle className="font-sans text-xl flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            Análise Astrológica Assence
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6 md:p-8">
-          {reading.analysisStatus === "pending" || reading.analysisStatus === "generating" ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <RefreshCw className="h-10 w-10 mb-4 animate-spin opacity-40" />
-              <p className="font-sans text-lg text-center">
-                {reading.analysisStatus === "generating"
-                  ? "A inteligência astrológica está tecendo a análise…"
-                  : "Aguardando início da geração…"}
-              </p>
-              <p className="text-sm mt-2 text-center opacity-70">
-                Isso pode levar alguns minutos. A página atualiza automaticamente.
-              </p>
-            </div>
-          ) : reading.analysisStatus === "error" ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <AlertCircle className="h-10 w-10 mb-4 opacity-40 text-destructive" />
-              <p className="font-sans text-lg">Erro ao gerar a análise</p>
-              <p className="text-sm mt-2">Tente novamente ou entre em contato com o suporte.</p>
-            </div>
-          ) : reading.analysis ? (
-            <div className="prose prose-invert prose-headings:font-sans prose-headings:text-primary prose-p:text-foreground/90 prose-p:leading-relaxed prose-code:text-primary prose-code:bg-primary/10 prose-pre:bg-background/50 prose-blockquote:border-primary/40 prose-blockquote:text-muted-foreground max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {withoutAffirmationAndAdvice(reading.analysis)}
-              </ReactMarkdown>
-            </div>
-          ) : (
-            <div className="text-center py-16 text-muted-foreground">
-              <p>Análise não disponível.</p>
-            </div>
+              </CardContent>
+            </Card>
           )}
-        </CardContent>
-      </Card>
+
+          {chart.aspects && (chart.aspects as unknown[]).length > 0 && (
+            <AspectsSection aspects={chart.aspects as { planet1: string; planet2: string; type: string; orb: number }[]} />
+          )}
+
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="border-b border-border/50">
+              <CardTitle className="font-sans text-xl flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-primary" />
+                Análise Astrológica Assence
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-6 md:p-8">
+              {reading.analysisStatus === "pending" || reading.analysisStatus === "generating" ? (
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <RefreshCw className="h-10 w-10 mb-4 animate-spin opacity-40" />
+                  <p className="font-sans text-lg text-center">
+                    {reading.analysisStatus === "generating"
+                      ? "A inteligência astrológica está tecendo a análise…"
+                      : "Aguardando início da geração…"}
+                  </p>
+                  <p className="text-sm mt-2 text-center opacity-70">
+                    Isso pode levar alguns minutos. A página atualiza automaticamente.
+                  </p>
+                </div>
+              ) : reading.analysisStatus === "error" ? (
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <AlertCircle className="h-10 w-10 mb-4 opacity-40 text-destructive" />
+                  <p className="font-sans text-lg">Erro ao gerar a análise</p>
+                  <p className="text-sm mt-2">Tente novamente ou entre em contato com o suporte.</p>
+                </div>
+              ) : reading.analysis ? (
+                <div className="prose prose-invert prose-headings:font-sans prose-headings:text-primary prose-p:text-foreground/90 prose-p:leading-relaxed prose-code:text-primary prose-code:bg-primary/10 prose-pre:bg-background/50 prose-blockquote:border-primary/40 prose-blockquote:text-muted-foreground max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {withoutAffirmationAndAdvice(reading.analysis)}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <div className="text-center py-16 text-muted-foreground">
+                  <p>Análise não disponível.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="transits" className="space-y-8">
+          <Card className="border-primary/25 bg-card/50 backdrop-blur-sm" data-testid="card-transit-map">
+            <CardHeader className="border-b border-border/50">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="font-sans text-xl flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-primary" />
+                    Posições planetárias atuais
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Planetas em trânsito sobre o zodíaco.
+                  </p>
+                </div>
+                {dailyTransits?.date && (
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(`${dailyTransits.date}T12:00:00`), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  </span>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-5 md:p-6">
+              {isTransitMapLoading ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-testid="status-transit-map-loading">
+                  {Array.from({ length: 11 }, (_, index) => (
+                    <Skeleton key={index} className="h-24 rounded-lg" />
+                  ))}
+                </div>
+              ) : isTransitMapError ? (
+                <div className="flex flex-col items-center gap-3 py-10 text-center" role="alert" data-testid="status-transit-map-error">
+                  <AlertCircle className="h-8 w-8 text-destructive opacity-70" />
+                  <p className="text-sm text-muted-foreground">Não foi possível carregar as posições dos trânsitos.</p>
+                  <Button variant="outline" size="sm" onClick={() => void refetchDailyTransits()}>
+                    Tentar novamente
+                  </Button>
+                </div>
+              ) : dailyTransits?.planets.length ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3" data-testid="grid-transit-planets">
+                  {dailyTransits.planets.map((planet) => (
+                    <div
+                      key={planet.name}
+                      data-testid={`card-transit-planet-${planet.name.toLowerCase().replace(/\s+/g, "-")}`}
+                      className="rounded-lg border border-border/40 bg-background/50 p-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium">{planet.name}</span>
+                        {planet.retrograde && (
+                          <span className="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded">Rx</span>
+                        )}
+                      </div>
+                      <p className="mt-2 text-primary font-sans text-lg">{planet.sign}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{formatDegMin(planet.degree)}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-10 text-center text-sm text-muted-foreground" data-testid="status-transit-map-empty">
+                  Posições de trânsito indisponíveis no momento.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-primary/25 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="border-b border-border/50">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="font-sans text-xl flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-primary" />
+                    Análise dos Trânsitos Astrológicos
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Leitura das ativações atuais sobre o mapa natal.
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateTransitAnalysis}
+                  disabled={generatingTransits || reading.transitAnalysisStatus === "generating"}
+                  className="border-primary/40 text-primary hover:bg-primary/10"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${(generatingTransits || reading.transitAnalysisStatus === "generating") ? "animate-spin" : ""}`} />
+                  {generatingTransits || reading.transitAnalysisStatus === "generating"
+                    ? "Gerando trânsitos…"
+                    : reading.transitAnalysisStatus === "completed"
+                      ? "Atualizar trânsitos"
+                      : "Gerar análise dos trânsitos"}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6 md:p-8">
+              {reading.transitAnalysisStatus === "generating" ? (
+                <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                  <RefreshCw className="h-8 w-8 mb-3 animate-spin opacity-50" />
+                  <p>A inteligência astrológica está analisando os trânsitos atuais…</p>
+                </div>
+              ) : reading.transitAnalysisStatus === "error" ? (
+                <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
+                  <AlertCircle className="h-8 w-8 mb-3 text-destructive opacity-70" />
+                  <p>Não foi possível gerar a análise dos trânsitos.</p>
+                  <p className="text-sm mt-1">Clique novamente para tentar.</p>
+                </div>
+              ) : reading.transitAnalysis ? (
+                <div className="prose prose-invert prose-headings:font-sans prose-headings:text-primary prose-p:text-foreground/90 prose-p:leading-relaxed max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {withoutAffirmationAndAdvice(reading.transitAnalysis)}
+                  </ReactMarkdown>
+                </div>
+              ) : (
+                <div className="text-center py-10 text-muted-foreground">
+                  <p>A análise dos trânsitos ainda não foi gerada.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="combined" className="space-y-8">
+          <Card className="border-primary/25 bg-card/50 backdrop-blur-sm" data-testid="card-combined-map">
+            <CardHeader className="border-b border-border/50">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <CardTitle className="font-sans text-xl flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-primary" />
+                    Visão combinada
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Compare as posições natais com as posições atuais dos trânsitos. Casas são exibidas apenas no mapa natal.
+                  </p>
+                </div>
+                {dailyTransits?.date && (
+                  <span className="text-xs text-muted-foreground">
+                    Trânsitos de {format(new Date(`${dailyTransits.date}T12:00:00`), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  </span>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              {isTransitMapLoading ? (
+                <div className="space-y-3 p-5" data-testid="status-combined-map-loading">
+                  {Array.from({ length: 11 }, (_, index) => (
+                    <Skeleton key={index} className="h-11 w-full rounded-lg" />
+                  ))}
+                </div>
+              ) : isTransitMapError ? (
+                <div className="flex flex-col items-center gap-3 py-10 text-center" role="alert" data-testid="status-combined-map-error">
+                  <AlertCircle className="h-8 w-8 text-destructive opacity-70" />
+                  <p className="text-sm text-muted-foreground">Não foi possível carregar as posições dos trânsitos para a comparação.</p>
+                  <Button variant="outline" size="sm" onClick={() => void refetchDailyTransits()}>
+                    Tentar novamente
+                  </Button>
+                </div>
+              ) : dailyTransits?.planets.length ? (
+                <div className="overflow-x-auto" data-testid="table-combined-map">
+                  <table className="w-full min-w-[620px] text-sm">
+                    <thead>
+                      <tr className="border-b border-border/40 text-left text-muted-foreground">
+                        <th scope="col" className="px-5 py-3 font-medium">Planeta</th>
+                        <th scope="col" className="px-5 py-3 font-medium">Mapa natal</th>
+                        <th scope="col" className="px-5 py-3 font-medium">Trânsito atual</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/30">
+                      {PLANETS.map((planet) => {
+                        const natalPosition = (chart as Record<string, {sign?: string; house?: number; degree?: number; retrograde?: boolean}>)[planet.id];
+                        const transitPosition = dailyTransits.planets.find(({ name }) => name === planet.label);
+                        if (!natalPosition?.sign && !transitPosition) return null;
+
+                        return (
+                          <tr key={planet.id} data-testid={`row-combined-map-${planet.id}`}>
+                            <th scope="row" className="px-5 py-3 font-medium">{planet.label}</th>
+                            <td className="px-5 py-3">
+                              {natalPosition?.sign ? (
+                                <div>
+                                  <span className="font-medium">{natalPosition.sign}</span>
+                                  <span className="ml-2 text-xs text-muted-foreground">
+                                    {natalPosition.house !== undefined ? `Casa ${natalPosition.house}` : ""}
+                                    {natalPosition.degree !== undefined ? ` · ${formatDegMin(natalPosition.degree)}` : ""}
+                                  </span>
+                                  {natalPosition.retrograde && (
+                                    <span className="ml-2 text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded">Rx</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-3">
+                              {transitPosition ? (
+                                <div>
+                                  <span className="font-medium">{transitPosition.sign}</span>
+                                  <span className="ml-2 text-xs text-muted-foreground">{formatDegMin(transitPosition.degree)}</span>
+                                  {transitPosition.retrograde && (
+                                    <span className="ml-2 text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded">Rx</span>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="py-10 text-center text-sm text-muted-foreground" data-testid="status-combined-map-empty">
+                  Posições de trânsito indisponíveis para a comparação.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="border-b border-border/50">
