@@ -5,10 +5,10 @@
  * Assence - Astrological Intelligence API
  * OpenAPI spec version: 0.1.0
  */
-import type { UpdateReadingBodyDeliveryStatus } from "./updateReadingBodyDeliveryStatus";
+import type { ReadingUpdateDeliveryStatus } from "./readingUpdateDeliveryStatus";
 
-export interface UpdateReadingBody {
+export interface ReadingUpdate {
   /** @nullable */
   notes?: string | null;
-  deliveryStatus?: UpdateReadingBodyDeliveryStatus;
+  deliveryStatus?: ReadingUpdateDeliveryStatus;
 }

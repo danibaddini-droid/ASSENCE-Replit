@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface RecalculateReadingBody {
+export interface ReadingRecalculationInput {
   /**
    * IANA timezone name override. If null, auto-detected from birth place coordinates.
    * @nullable

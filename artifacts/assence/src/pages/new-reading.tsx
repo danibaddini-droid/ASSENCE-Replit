@@ -206,6 +206,18 @@ export default function NewReading() {
                   },
                 ])
               ),
+              sun: {
+                sign: planets.sun.sign,
+                house: planets.sun.house,
+                degree: toDecimal(planets.sun.degrees, planets.sun.minutes),
+                retrograde: planets.sun.retrograde,
+              },
+              moon: {
+                sign: planets.moon.sign,
+                house: planets.moon.house,
+                degree: toDecimal(planets.moon.degrees, planets.moon.minutes),
+                retrograde: planets.moon.retrograde,
+              },
               houseCusps: houseCusps.map((c, i) => ({
                 house: i + 1,
                 sign: c.sign,

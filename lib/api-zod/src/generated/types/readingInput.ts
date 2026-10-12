@@ -7,7 +7,7 @@
  */
 import type { BirthChart } from "./birthChart";
 
-export interface CreateReadingBody {
+export interface ReadingInput {
   clientName: string;
   birthDate: string;
   /** @nullable */

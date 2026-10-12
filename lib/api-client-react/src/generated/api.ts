@@ -18,17 +18,17 @@ import type {
 
 import type {
   Conversation,
+  ConversationInput,
   ConversationWithMessages,
-  CreateConversationBody,
-  CreateReadingBody,
   DailyTransitsResult,
   ErrorResponse,
   HealthStatus,
   Reading,
+  ReadingInput,
+  ReadingRecalculationInput,
+  ReadingUpdate,
   ReadingsStats,
-  RecalculateReadingBody,
   SendOpenaiMessageBody,
-  UpdateReadingBody,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -198,14 +198,14 @@ export const getCreateReadingUrl = () => {
 };
 
 export const createReading = async (
-  createReadingBody: CreateReadingBody,
+  readingInput: ReadingInput,
   options?: RequestInit,
 ): Promise<Reading> => {
   return customFetch<Reading>(getCreateReadingUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(createReadingBody),
+    body: JSON.stringify(readingInput),
   });
 };
 
@@ -216,14 +216,14 @@ export const getCreateReadingMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof createReading>>,
     TError,
-    { data: BodyType<CreateReadingBody> },
+    { data: BodyType<ReadingInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof createReading>>,
   TError,
-  { data: BodyType<CreateReadingBody> },
+  { data: BodyType<ReadingInput> },
   TContext
 > => {
   const mutationKey = ["createReading"];
@@ -237,7 +237,7 @@ export const getCreateReadingMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof createReading>>,
-    { data: BodyType<CreateReadingBody> }
+    { data: BodyType<ReadingInput> }
   > = (props) => {
     const { data } = props ?? {};
 
@@ -250,7 +250,7 @@ export const getCreateReadingMutationOptions = <
 export type CreateReadingMutationResult = NonNullable<
   Awaited<ReturnType<typeof createReading>>
 >;
-export type CreateReadingMutationBody = BodyType<CreateReadingBody>;
+export type CreateReadingMutationBody = BodyType<ReadingInput>;
 export type CreateReadingMutationError = ErrorType<ErrorResponse>;
 
 /**
@@ -263,14 +263,14 @@ export const useCreateReading = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof createReading>>,
     TError,
-    { data: BodyType<CreateReadingBody> },
+    { data: BodyType<ReadingInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof createReading>>,
   TError,
-  { data: BodyType<CreateReadingBody> },
+  { data: BodyType<ReadingInput> },
   TContext
 > => {
   return useMutation(getCreateReadingMutationOptions(options));
@@ -372,14 +372,14 @@ export const getUpdateReadingUrl = (id: number) => {
 
 export const updateReading = async (
   id: number,
-  updateReadingBody: UpdateReadingBody,
+  readingUpdate: ReadingUpdate,
   options?: RequestInit,
 ): Promise<Reading> => {
   return customFetch<Reading>(getUpdateReadingUrl(id), {
     ...options,
     method: "PATCH",
     headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(updateReadingBody),
+    body: JSON.stringify(readingUpdate),
   });
 };
 
@@ -390,14 +390,14 @@ export const getUpdateReadingMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateReading>>,
     TError,
-    { id: number; data: BodyType<UpdateReadingBody> },
+    { id: number; data: BodyType<ReadingUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof updateReading>>,
   TError,
-  { id: number; data: BodyType<UpdateReadingBody> },
+  { id: number; data: BodyType<ReadingUpdate> },
   TContext
 > => {
   const mutationKey = ["updateReading"];
@@ -411,7 +411,7 @@ export const getUpdateReadingMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof updateReading>>,
-    { id: number; data: BodyType<UpdateReadingBody> }
+    { id: number; data: BodyType<ReadingUpdate> }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -424,7 +424,7 @@ export const getUpdateReadingMutationOptions = <
 export type UpdateReadingMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateReading>>
 >;
-export type UpdateReadingMutationBody = BodyType<UpdateReadingBody>;
+export type UpdateReadingMutationBody = BodyType<ReadingUpdate>;
 export type UpdateReadingMutationError = ErrorType<ErrorResponse>;
 
 /**
@@ -437,14 +437,14 @@ export const useUpdateReading = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof updateReading>>,
     TError,
-    { id: number; data: BodyType<UpdateReadingBody> },
+    { id: number; data: BodyType<ReadingUpdate> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof updateReading>>,
   TError,
-  { id: number; data: BodyType<UpdateReadingBody> },
+  { id: number; data: BodyType<ReadingUpdate> },
   TContext
 > => {
   return useMutation(getUpdateReadingMutationOptions(options));
@@ -543,14 +543,14 @@ export const getRecalculateReadingUrl = (id: number) => {
 
 export const recalculateReading = async (
   id: number,
-  recalculateReadingBody?: RecalculateReadingBody,
+  readingRecalculationInput?: ReadingRecalculationInput,
   options?: RequestInit,
 ): Promise<Reading> => {
   return customFetch<Reading>(getRecalculateReadingUrl(id), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(recalculateReadingBody),
+    body: JSON.stringify(readingRecalculationInput),
   });
 };
 
@@ -561,14 +561,14 @@ export const getRecalculateReadingMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof recalculateReading>>,
     TError,
-    { id: number; data: BodyType<RecalculateReadingBody> },
+    { id: number; data: BodyType<ReadingRecalculationInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof recalculateReading>>,
   TError,
-  { id: number; data: BodyType<RecalculateReadingBody> },
+  { id: number; data: BodyType<ReadingRecalculationInput> },
   TContext
 > => {
   const mutationKey = ["recalculateReading"];
@@ -582,7 +582,7 @@ export const getRecalculateReadingMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof recalculateReading>>,
-    { id: number; data: BodyType<RecalculateReadingBody> }
+    { id: number; data: BodyType<ReadingRecalculationInput> }
   > = (props) => {
     const { id, data } = props ?? {};
 
@@ -595,7 +595,8 @@ export const getRecalculateReadingMutationOptions = <
 export type RecalculateReadingMutationResult = NonNullable<
   Awaited<ReturnType<typeof recalculateReading>>
 >;
-export type RecalculateReadingMutationBody = BodyType<RecalculateReadingBody>;
+export type RecalculateReadingMutationBody =
+  BodyType<ReadingRecalculationInput>;
 export type RecalculateReadingMutationError = ErrorType<ErrorResponse>;
 
 /**
@@ -608,14 +609,14 @@ export const useRecalculateReading = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof recalculateReading>>,
     TError,
-    { id: number; data: BodyType<RecalculateReadingBody> },
+    { id: number; data: BodyType<ReadingRecalculationInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof recalculateReading>>,
   TError,
-  { id: number; data: BodyType<RecalculateReadingBody> },
+  { id: number; data: BodyType<ReadingRecalculationInput> },
   TContext
 > => {
   return useMutation(getRecalculateReadingMutationOptions(options));
@@ -1022,14 +1023,14 @@ export const getCreateConversationUrl = () => {
 };
 
 export const createConversation = async (
-  createConversationBody: CreateConversationBody,
+  conversationInput: ConversationInput,
   options?: RequestInit,
 ): Promise<Conversation> => {
   return customFetch<Conversation>(getCreateConversationUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },
-    body: JSON.stringify(createConversationBody),
+    body: JSON.stringify(conversationInput),
   });
 };
 
@@ -1040,14 +1041,14 @@ export const getCreateConversationMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof createConversation>>,
     TError,
-    { data: BodyType<CreateConversationBody> },
+    { data: BodyType<ConversationInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof createConversation>>,
   TError,
-  { data: BodyType<CreateConversationBody> },
+  { data: BodyType<ConversationInput> },
   TContext
 > => {
   const mutationKey = ["createConversation"];
@@ -1061,7 +1062,7 @@ export const getCreateConversationMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof createConversation>>,
-    { data: BodyType<CreateConversationBody> }
+    { data: BodyType<ConversationInput> }
   > = (props) => {
     const { data } = props ?? {};
 
@@ -1074,7 +1075,7 @@ export const getCreateConversationMutationOptions = <
 export type CreateConversationMutationResult = NonNullable<
   Awaited<ReturnType<typeof createConversation>>
 >;
-export type CreateConversationMutationBody = BodyType<CreateConversationBody>;
+export type CreateConversationMutationBody = BodyType<ConversationInput>;
 export type CreateConversationMutationError = ErrorType<unknown>;
 
 /**
@@ -1087,14 +1088,14 @@ export const useCreateConversation = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof createConversation>>,
     TError,
-    { data: BodyType<CreateConversationBody> },
+    { data: BodyType<ConversationInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof createConversation>>,
   TError,
-  { data: BodyType<CreateConversationBody> },
+  { data: BodyType<ConversationInput> },
   TContext
 > => {
   return useMutation(getCreateConversationMutationOptions(options));

@@ -6,4 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type ReadingBirthChart = { [key: string]: unknown };
+export interface ConversationInput {
+  /** @nullable */
+  title?: string | null;
+  /** @nullable */
+  readingId?: number | null;
+}

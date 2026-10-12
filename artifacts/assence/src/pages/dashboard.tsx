@@ -181,7 +181,7 @@ export default function Dashboard() {
             <div className="divide-y divide-primary/10">
               {upcomingBirthdays.map((reading) => {
                 const birth = new Date(reading.birthDate + "T00:00:00");
-                const sunSign = (reading.birthChart as Record<string, {sign:string}> | null)?.sun?.sign;
+                const sunSign = reading.birthChart.sun?.sign;
                 const isToday = reading.daysUntil === 0;
                 const isTomorrow = reading.daysUntil === 1;
                 return (
@@ -265,8 +265,8 @@ export default function Dashboard() {
                       <span>{format(new Date(reading.birthDate + "T12:00:00"), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
                       <span>•</span>
                       <span>
-                        {(reading.birthChart as Record<string, unknown> | null)?.sun
-                          ? `Sol em ${(reading.birthChart as Record<string, {sign:string}>).sun.sign}`
+                        {reading.birthChart.sun?.sign
+                          ? `Sol em ${reading.birthChart.sun.sign}`
                           : reading.birthDate}
                       </span>
                     </div>

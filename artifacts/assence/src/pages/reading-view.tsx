@@ -317,11 +317,14 @@ export default function ReadingView() {
             {reading.birthTime && <><span>•</span><span>{reading.birthTime}</span></>}
             {reading.birthPlace && <><span>•</span><span>{reading.birthPlace}</span></>}
             {reading.clientEmail && <><span>•</span><span className="text-xs opacity-70">{reading.clientEmail}</span></>}
-            {(reading.birthChart as Record<string,unknown>)?.timezone && (() => {
-              const tz = (reading.birthChart as Record<string,unknown>).timezone as {name:string;utcOffsetMin:number};
-              const h = tz.utcOffsetMin / 60;
-              return <><span>•</span><span className="text-xs opacity-70">{tz.name} (UTC{h >= 0 ? "+" : ""}{h})</span></>;
-            })()}
+            {chart.timezone?.name ? (
+              <>
+                <span>•</span>
+                <span className="text-xs opacity-70">
+                  {chart.timezone.name} (UTC{chart.timezone.utcOffsetMin >= 0 ? "+" : ""}{chart.timezone.utcOffsetMin / 60})
+                </span>
+              </>
+            ) : null}
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0 pt-8 justify-end">
@@ -438,7 +441,7 @@ export default function ReadingView() {
             <CardContent className="p-0">
               <div className="divide-y divide-border/30">
                 {PLANETS.map((planet) => {
-                  const pos = (chart as Record<string, {sign?: string; house?: number; degree?: number; retrograde?: boolean}>)[planet.id];
+                  const pos = chart[planet.id];
                   if (!pos?.sign) return null;
                   return (
                     <div key={planet.id} data-testid={`row-natal-planet-${planet.id}`} className="flex items-center justify-between px-5 py-3 text-sm">
@@ -460,7 +463,7 @@ export default function ReadingView() {
             </CardContent>
           </Card>
 
-          {chart.houseCusps && (chart.houseCusps as unknown[]).length > 0 && (
+          {chart.houseCusps && chart.houseCusps.length > 0 && (
             <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
               <CardHeader className="border-b border-border/50">
                 <CardTitle className="font-sans text-xl flex items-center gap-2">
@@ -470,7 +473,7 @@ export default function ReadingView() {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="grid grid-cols-2 md:grid-cols-3 divide-border/30">
-                  {(chart.houseCusps as { house: number; sign: string; degrees?: number; minutes?: number }[]).map((cusp) => (
+                  {chart.houseCusps.map((cusp) => (
                     <div key={cusp.house} className="flex items-center justify-between px-5 py-3 text-sm border-b border-r border-border/20">
                       <span className="text-primary font-medium w-16 shrink-0">Casa {cusp.house}</span>
                       <span className="flex-1 font-medium">{cusp.sign}</span>
@@ -484,7 +487,7 @@ export default function ReadingView() {
             </Card>
           )}
 
-          {chart.aspects && (chart.aspects as unknown[]).length > 0 && (
+          {chart.aspects && chart.aspects.length > 0 && (
             <AspectsSection aspects={chart.aspects as { planet1: string; planet2: string; type: string; orb: number }[]} />
           )}
 
@@ -692,7 +695,7 @@ export default function ReadingView() {
                     </thead>
                     <tbody className="divide-y divide-border/30">
                       {PLANETS.map((planet) => {
-                        const natalPosition = (chart as Record<string, {sign?: string; house?: number; degree?: number; retrograde?: boolean}>)[planet.id];
+                        const natalPosition = chart[planet.id];
                         const transitPosition = dailyTransits.planets.find(({ name }) => name === planet.label);
                         if (!natalPosition?.sign && !transitPosition) return null;
 

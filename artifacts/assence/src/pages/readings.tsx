@@ -57,8 +57,8 @@ export default function Readings() {
   const [deliveryFilter, setDeliveryFilter] = useState<DeliveryFilter>("all");
   const [signFilter, setSignFilter] = useState("all");
 
-  const getSunSign = (r: { birthChart: unknown }) =>
-    ((r.birthChart as Record<string, { sign: string } | undefined>)?.sun?.sign) ?? null;
+  const getSunSign = (r: { birthChart: { sun?: { sign?: string } } }) =>
+    r.birthChart.sun?.sign ?? null;
 
   const availableSigns = Array.from(
     new Set((readings ?? []).map(getSunSign).filter(Boolean) as string[])
@@ -266,10 +266,10 @@ export default function Readings() {
                             <span className="hidden sm:inline truncate max-w-40">{reading.birthPlace}</span>
                           </>
                         )}
-                        {(reading.birthChart as Record<string, unknown>)?.sun && (
+                        {reading.birthChart.sun?.sign && (
                           <>
                             <span className="hidden sm:inline">•</span>
-                            <span className="hidden sm:inline">Sol em {(reading.birthChart as Record<string, {sign:string}>).sun.sign}</span>
+                            <span className="hidden sm:inline">Sol em {reading.birthChart.sun.sign}</span>
                           </>
                         )}
                       </div>

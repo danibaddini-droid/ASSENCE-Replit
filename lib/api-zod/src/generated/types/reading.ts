@@ -5,7 +5,7 @@
  * Assence - Astrological Intelligence API
  * OpenAPI spec version: 0.1.0
  */
-import type { ReadingBirthChart } from "./readingBirthChart";
+import type { BirthChart } from "./birthChart";
 import type { ReadingDeliveryStatus } from "./readingDeliveryStatus";
 
 export interface Reading {
@@ -15,7 +15,7 @@ export interface Reading {
   /** @nullable */
   birthTime?: string | null;
   birthPlace: string;
-  birthChart: ReadingBirthChart;
+  birthChart: BirthChart;
   /** @nullable */
   analysis?: string | null;
   analysisStatus: string;
