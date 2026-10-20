@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export type UpdateReadingBodyDeliveryStatus =
-  (typeof UpdateReadingBodyDeliveryStatus)[keyof typeof UpdateReadingBodyDeliveryStatus];
+export type ReadingUpdateDeliveryStatus =
+  (typeof ReadingUpdateDeliveryStatus)[keyof typeof ReadingUpdateDeliveryStatus];
 
-export const UpdateReadingBodyDeliveryStatus = {
+export const ReadingUpdateDeliveryStatus = {
   pending: "pending",
   delivered: "delivered",
 } as const;

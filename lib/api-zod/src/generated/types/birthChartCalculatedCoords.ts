@@ -6,9 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateConversationBody {
-  /** @nullable */
-  title?: string | null;
-  /** @nullable */
-  readingId?: number | null;
-}
+export type BirthChartCalculatedCoords = {
+  lat: number;
+  lon: number;
+};

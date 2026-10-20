@@ -50,7 +50,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateReadingBody"
+              $ref: "#/components/schemas/ReadingInput"
       responses:
         "201":
           description: Reading created
@@ -104,7 +104,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateReadingBody"
+              $ref: "#/components/schemas/ReadingUpdate"
       responses:
         "200":
           description: Updated reading
@@ -154,7 +154,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RecalculateReadingBody"
+              $ref: "#/components/schemas/ReadingRecalculationInput"
       responses:
         "200":
           description: Updated reading
@@ -268,7 +268,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateConversationBody"
+              $ref: "#/components/schemas/ConversationInput"
       responses:
         "201":
           description: Conversation created
@@ -434,13 +434,37 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Aspect"
+        ascendantDegree:
+          type: integer
+        ascendantMinutes:
+          type: integer
+        calculatedCoords:
+          type: object
+          properties:
+            lat:
+              type: number
+            lon:
+              type: number
+          required:
+            - lat
+            - lon
+        timezone:
+          type: object
+          properties:
+            name:
+              type: string
+            utcOffsetMin:
+              type: integer
+          required:
+            - name
+            - utcOffsetMin
       required:
         - ascendant
         - midheaven
         - sun
         - moon
 
-    UpdateReadingBody:
+    ReadingUpdate:
       type: object
       properties:
         notes:
@@ -449,7 +473,7 @@ components:
           type: string
           enum: ["pending", "delivered"]
 
-    CreateReadingBody:
+    ReadingInput:
       type: object
       properties:
         clientName:
@@ -485,7 +509,7 @@ components:
         - birthDate
         - birthPlace
 
-    RecalculateReadingBody:
+    ReadingRecalculationInput:
       type: object
       properties:
         timezoneOverride:
@@ -506,7 +530,7 @@ components:
         birthPlace:
           type: string
         birthChart:
-          type: object
+          $ref: "#/components/schemas/BirthChart"
         analysis:
           type: ["string", "null"]
         analysisStatus:
@@ -630,7 +654,7 @@ components:
         - createdAt
         - updatedAt
 
-    CreateConversationBody:
+    ConversationInput:
       type: object
       properties:
         title:

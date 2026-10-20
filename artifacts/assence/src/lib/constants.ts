@@ -30,7 +30,7 @@ export const PLANETS = [
   { id: "lilith", label: "Lilith" },
   { id: "northNode", label: "Nodo Norte" },
   { id: "southNode", label: "Nodo Sul" }
-];
+] as const;
 
 export const ASPECT_TYPES = [
   "Conjunção",

@@ -1,7 +1,7 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { PLANETS } from "./constants";
-import type { Reading } from "@workspace/api-zod";
+import type { Reading } from "@workspace/api-client-react";
 import dosisRegularUrl from "@/assets/fonts/dosis-regular.ttf?url";
 import dosisSemiboldUrl from "@/assets/fonts/dosis-semibold.ttf?url";
 
@@ -168,13 +168,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   drawCoverArtwork();
 
   // Key planet cards
-  const chart = reading.birthChart as {
-    ascendant?: string;
-    midheaven?: string;
-    sun?: { sign?: string; house?: number };
-    moon?: { sign?: string; house?: number };
-    [key: string]: unknown;
-  };
+  const chart = reading.birthChart;
 
   // ─── Birth chart overview ──────────────────────────────────────────────────
   doc.addPage();
@@ -235,13 +229,13 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
 
   const planetRows: string[][] = [];
   for (const planet of PLANETS) {
-    const pos = (chart as Record<string, { sign?: string; house?: number; degree?: number; retrograde?: boolean }>)[planet.id];
+    const pos = chart[planet.id];
     if (!pos?.sign) continue;
     planetRows.push([
       planet.label,
       pos.sign,
       `Casa ${pos.house ?? "—"}`,
-      pos.degree !== undefined ? `${pos.degree.toFixed(1)}°` : "—",
+      pos.degree != null ? `${pos.degree.toFixed(1)}°` : "—",
       pos.retrograde ? "Rx" : "",
     ]);
   }
@@ -282,7 +276,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   });
 
   // ─── House cusps table ────────────────────────────────────────────────────
-  if (chart.houseCusps && (chart.houseCusps as unknown[]).length > 0) {
+  if (chart.houseCusps?.length) {
     const cusps = chart.houseCusps as { house: number; sign: string; degrees?: number; minutes?: number }[];
     const cuspsY0 = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
     let cuspsY = cuspsY0;
@@ -338,7 +332,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   }
 
   // ─── Aspects table (grouped by type) ──────────────────────────────────────
-  if (chart.aspects && (chart.aspects as unknown[]).length > 0) {
+  if (chart.aspects?.length) {
     const aspects = chart.aspects as { planet1: string; planet2: string; type: string; orb: number }[];
     const finalY = (doc as unknown as { lastAutoTable: { finalY: number } }).lastAutoTable.finalY;
     let aspectsY = finalY + 10;

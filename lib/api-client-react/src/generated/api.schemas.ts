@@ -37,6 +37,16 @@ export interface HouseCusp {
   minutes?: number;
 }
 
+export type BirthChartCalculatedCoords = {
+  lat: number;
+  lon: number;
+};
+
+export type BirthChartTimezone = {
+  name: string;
+  utcOffsetMin: number;
+};
+
 export interface BirthChart {
   ascendant: string;
   midheaven: string;
@@ -56,68 +66,72 @@ export interface BirthChart {
   southNode?: PlanetPosition;
   houseCusps?: HouseCusp[];
   aspects?: Aspect[];
+  ascendantDegree?: number;
+  ascendantMinutes?: number;
+  calculatedCoords?: BirthChartCalculatedCoords;
+  timezone?: BirthChartTimezone;
 }
 
-export type UpdateReadingBodyDeliveryStatus =
-  (typeof UpdateReadingBodyDeliveryStatus)[keyof typeof UpdateReadingBodyDeliveryStatus];
+export type ReadingUpdateDeliveryStatus =
+  (typeof ReadingUpdateDeliveryStatus)[keyof typeof ReadingUpdateDeliveryStatus];
 
-export const UpdateReadingBodyDeliveryStatus = {
+export const ReadingUpdateDeliveryStatus = {
   pending: "pending",
   delivered: "delivered",
 } as const;
 
-export interface UpdateReadingBody {
+export interface ReadingUpdate {
   /** @nullable */
   notes?: string | null;
-  deliveryStatus?: UpdateReadingBodyDeliveryStatus;
+  deliveryStatus?: ReadingUpdateDeliveryStatus;
 }
 
-export type CreateReadingBodyAnalysisType =
-  (typeof CreateReadingBodyAnalysisType)[keyof typeof CreateReadingBodyAnalysisType];
+  export type CreateReadingBodyAnalysisType =
+    (typeof CreateReadingBodyAnalysisType)[keyof typeof CreateReadingBodyAnalysisType];
 
-export const CreateReadingBodyAnalysisType = {
-  natal: "natal",
-  "solar-return": "solar-return",
-  "secondary-progression": "secondary-progression",
-  integrated: "integrated",
-} as const;
+  export const CreateReadingBodyAnalysisType = {
+    natal: "natal",
+    "solar-return": "solar-return",
+    "secondary-progression": "secondary-progression",
+    integrated: "integrated",
+  } as const;
 
-export interface CreateReadingBody {
-  clientName: string;
-  birthDate: string;
-  /** @nullable */
-  birthTime?: string | null;
-  birthPlace: string;
-  birthChart?: BirthChart;
-  autoCalculate?: boolean;
-  /** @nullable */
-  clientAge?: number | null;
-  /** @nullable */
-  clientEmail?: string | null;
-  /** @nullable */
-  notes?: string | null;
-  /**
-   * IANA timezone name (e.g. "UTC", "America/New_York"). If null, auto-detected from birth place coordinates.
-   * @nullable
-   */
-  timezoneOverride?: string | null;
-  analysisType?: CreateReadingBodyAnalysisType;
-  /**
-   * Location where the client will spend their birthday; required for solar-return and integrated analyses.
-   * @nullable
-   */
-  solarReturnLocation?: string | null;
-}
+  export interface ReadingInput {
+    clientName: string;
+    birthDate: string;
+    /** @nullable */
+    birthTime?: string | null;
+    birthPlace: string;
+    birthChart?: BirthChart;
+    autoCalculate?: boolean;
+    /** @nullable */
+    clientAge?: number | null;
+    /** @nullable */
+    clientEmail?: string | null;
+    /** @nullable */
+    notes?: string | null;
+    /**
+     * IANA timezone name (e.g. "UTC", "America/New_York"). If null, auto-detected from birth place coordinates.
+     * @nullable
+     */
+    timezoneOverride?: string | null;
+    analysisType?: CreateReadingBodyAnalysisType;
+    /**
+     * Location where the client will spend their birthday; required for solar-return and integrated analyses.
+     * @nullable
+     */
+    solarReturnLocation?: string | null;
+  }
 
-export interface RecalculateReadingBody {
+  export interface CreateReadingBody extends ReadingInput {}
+
+export interface ReadingRecalculationInput {
   /**
    * IANA timezone name override. If null, auto-detected from birth place coordinates.
    * @nullable
    */
   timezoneOverride?: string | null;
 }
-
-export type ReadingBirthChart = { [key: string]: unknown };
 
 export type ReadingDeliveryStatus =
   (typeof ReadingDeliveryStatus)[keyof typeof ReadingDeliveryStatus];
@@ -134,7 +148,7 @@ export interface Reading {
   /** @nullable */
   birthTime?: string | null;
   birthPlace: string;
-  birthChart: ReadingBirthChart;
+  birthChart: BirthChart;
   /** @nullable */
   analysis?: string | null;
   analysisStatus: string;
@@ -200,7 +214,7 @@ export interface Conversation {
   updatedAt: string;
 }
 
-export interface CreateConversationBody {
+export interface ConversationInput {
   /** @nullable */
   title?: string | null;
   /** @nullable */

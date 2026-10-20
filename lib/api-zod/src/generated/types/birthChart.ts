@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { Aspect } from "./aspect";
+import type { BirthChartCalculatedCoords } from "./birthChartCalculatedCoords";
+import type { BirthChartTimezone } from "./birthChartTimezone";
 import type { HouseCusp } from "./houseCusp";
 import type { PlanetPosition } from "./planetPosition";
 
@@ -28,4 +30,8 @@ export interface BirthChart {
   southNode?: PlanetPosition;
   houseCusps?: HouseCusp[];
   aspects?: Aspect[];
+  ascendantDegree?: number;
+  ascendantMinutes?: number;
+  calculatedCoords?: BirthChartCalculatedCoords;
+  timezone?: BirthChartTimezone;
 }
