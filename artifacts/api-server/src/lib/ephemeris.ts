@@ -310,7 +310,11 @@ function localToUT(
   lon: number,
   timezoneOverride?: string | null
 ): { utcDate: Date; tzName: string; utcOffsetMin: number } {
-  const timePart = birthTime ?? "12:00";
+  const rawTime = (birthTime ?? "").trim();
+  const timePart = rawTime.length > 0 ? rawTime : "12:00";
+  const hasSeconds = timePart.split(":").length === 3;
+  const isoTime = hasSeconds ? timePart : `${timePart}:00`;
+
   let tzName: string;
   if (timezoneOverride && timezoneOverride.trim().length > 0) {
     tzName = timezoneOverride.trim();
@@ -319,7 +323,11 @@ function localToUT(
     tzName = timezones[0] ?? "UTC";
   }
 
-  const dt = DateTime.fromISO(`${birthDate}T${timePart}:00`, { zone: tzName });
+  const dt = DateTime.fromISO(`${birthDate}T${isoTime}`, { zone: tzName });
+  if (!dt.isValid) {
+    throw new Error(`Hora de nascimento inválida: ${birthDate}T${isoTime} (${tzName})`);
+  }
+
   return {
     utcDate: dt.toUTC().toJSDate(),
     tzName,
@@ -377,6 +385,90 @@ export interface DailyTransitsResult {
 }
 
 type NatalChartEntry = { sign?: string; degree?: number };
+export interface MonthlyTransitSnapshot {
+  date: string;
+  planets: Array<DailyTransitPlanet & { natalHouse: number }>;
+  aspects: Array<{ transitPlanet: string; natalPlanet: string; type: string; orb: number }>;
+}
+
+export function calculateMonthlyTransitForecast(birthChart: unknown): MonthlyTransitSnapshot[] {
+  const chart = birthChart as Record<string, NatalChartEntry> | null;
+  if (!chart?.sun?.sign) throw new Error("Mapa natal sem posição solar para calcular previsões");
+  const natalCusps = chartCusps(chart);
+
+  const bodies: Array<{ name: string; body: AstroBody }> = [
+    { name: "Sol", body: "Sun" },
+    { name: "Lua", body: "Moon" },
+    { name: "Mercúrio", body: "Mercury" },
+    { name: "Vênus", body: "Venus" },
+    { name: "Marte", body: "Mars" },
+    { name: "Júpiter", body: "Jupiter" },
+    { name: "Saturno", body: "Saturn" },
+    { name: "Urano", body: "Uranus" },
+    { name: "Netuno", body: "Neptune" },
+    { name: "Plutão", body: "Pluto" },
+  ];
+  const natalPlanets = Object.entries({
+    Sol: "sun",
+    Lua: "moon",
+    Mercúrio: "mercury",
+    Vênus: "venus",
+    Marte: "mars",
+    Júpiter: "jupiter",
+    Saturno: "saturn",
+    Urano: "uranus",
+    Netuno: "neptune",
+    Plutão: "pluto",
+  }).flatMap(([label, key]) => {
+    const position = chart[key];
+    const longitude = position?.sign && typeof position.degree === "number"
+      ? natalLon(position.sign, position.degree)
+      : null;
+    return longitude === null ? [] : [{ label, longitude }];
+  });
+
+  return Array.from({ length: 12 }, (_, index) => {
+    const date = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() + index, 15, 12));
+    const monthlyPositions = bodies.map(({ name, body }) => {
+      const longitude = geoEclipticLon(body, date);
+      const { sign, degree } = signOf(longitude);
+      return {
+        longitude,
+        name,
+        sign,
+        degree: Math.round(degree * 10) / 10,
+        retrograde: isRetrograde(body, date),
+        natalHouse: houseForLongitude(longitude, natalCusps),
+      };
+    });
+    const aspects = monthlyPositions.flatMap((transit) => {
+      return natalPlanets.flatMap((natal) => {
+        const separation = aspectAngle(transit.longitude, natal.longitude);
+        const aspect = TRANSIT_ASPECTS
+          .map((candidate) => ({ ...candidate, orb: Math.abs(separation - candidate.angle) }))
+          .filter((candidate) => candidate.orb <= TRANSIT_ORB)
+          .sort((a, b) => a.orb - b.orb)[0];
+        return aspect
+          ? [{
+              transitPlanet: transit.name,
+              natalPlanet: natal.label,
+              type: aspect.type,
+              orb: Math.round(aspect.orb * 10) / 10,
+            }]
+          : [];
+      });
+    }).sort((a, b) => a.orb - b.orb).slice(0, 8);
+
+    const planets = monthlyPositions.map(({ name, sign, degree, retrograde, natalHouse }) => ({
+      name,
+      sign,
+      degree,
+      retrograde,
+      natalHouse,
+    }));
+    return { date: date.toISOString().slice(0, 10), planets, aspects };
+  });
+}
 
 export function calculateTodayTransits(
   readings: Array<{ id: number; clientName: string; birthChart: unknown }>
@@ -520,7 +612,7 @@ export async function calculateBirthChart(
   const chirLon = chironLon(jd, utcDate);
 
   const { sign: ascSign, degree: ascDeg } = signOf(ascLon);
-  const { sign: mcSign }                  = signOf(mcLon);
+  const { sign: mcSign, degree: mcDeg }   = signOf(mcLon);
 
   const houseCusps = cusps.map((cl, i) => {
     const { sign: cs, degree: cd } = signOf(cl);
@@ -548,6 +640,8 @@ export async function calculateBirthChart(
     ascendantDegree: Math.floor(ascDeg),
     ascendantMinutes: Math.round((ascDeg % 1) * 60),
     midheaven: mcSign,
+    midheavenDegree: Math.floor(mcDeg),
+    midheavenMinutes: Math.round((mcDeg % 1) * 60),
     sun:      planet(sLon),
     moon:     planet(mLon),
     mercury:  planet(merLon, isRetrograde("Mercury", utcDate)),
@@ -567,4 +661,214 @@ export async function calculateBirthChart(
     calculatedCoords: { lat, lon },
     timezone: { name: tzName, utcOffsetMin },
   };
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TROPICAL_YEAR_DAYS = 365.2422;
+
+function longitudeFromPosition(position: unknown): number | null {
+  if (!position || typeof position !== "object") return null;
+  const value = position as { sign?: string; degree?: number };
+  const signIndex = value.sign ? SIGN_INDEX[value.sign] : undefined;
+  if (signIndex === undefined || typeof value.degree !== "number") return null;
+  return norm(signIndex * 30 + value.degree);
+}
+
+function signedLongitudeDifference(longitude: number, target: number): number {
+  return ((longitude - target + 540) % 360) - 180;
+}
+
+function findSolarReturn(targetLongitude: number, year: number, month: number, day: number): Date {
+  const center = Date.UTC(year, month - 1, day, 12);
+  const start = center - 4 * DAY_MS;
+  const end = center + 4 * DAY_MS;
+  const step = 6 * 60 * 60 * 1000;
+  let low = start;
+  let lowDifference = signedLongitudeDifference(geoEclipticLon("Sun", new Date(low)), targetLongitude);
+  let high: number | undefined;
+
+  for (let timestamp = start + step; timestamp <= end; timestamp += step) {
+    const difference = signedLongitudeDifference(geoEclipticLon("Sun", new Date(timestamp)), targetLongitude);
+    if (lowDifference <= 0 && difference >= 0) {
+      high = timestamp;
+      break;
+    }
+    low = timestamp;
+    lowDifference = difference;
+  }
+
+  if (high === undefined) {
+    throw new Error(`Não foi possível encontrar o retorno solar para ${year}-${month}-${day}`);
+  }
+
+  let highTimestamp = high;
+  for (let iteration = 0; iteration < 40; iteration++) {
+    const midpoint = Math.floor((low + highTimestamp) / 2);
+    const difference = signedLongitudeDifference(geoEclipticLon("Sun", new Date(midpoint)), targetLongitude);
+    if (difference < 0) low = midpoint;
+    else highTimestamp = midpoint;
+  }
+  return new Date(highTimestamp);
+}
+
+async function calculateChartAtInstant(
+  instant: Date,
+  location: string,
+  timezone: string,
+): Promise<Record<string, unknown>> {
+  const localTime = DateTime.fromJSDate(instant, { zone: "utc" }).setZone(timezone);
+  if (!localTime.isValid) throw new Error(`Fuso horário inválido: ${timezone}`);
+  return calculateBirthChart(
+    localTime.toFormat("yyyy-MM-dd"),
+    localTime.toFormat("HH:mm:ss"),
+    location,
+    timezone,
+  );
+}
+
+function chartCusps(chart: Record<string, unknown>): number[] {
+  const cusps = chart.houseCusps;
+  if (!Array.isArray(cusps) || cusps.length !== 12) {
+    throw new Error("O mapa precisa conter as 12 cúspides para calcular sobreposições");
+  }
+  return cusps.map((entry) => {
+    const cusp = entry as { sign?: string; degrees?: number; minutes?: number };
+    const signIndex = cusp.sign ? SIGN_INDEX[cusp.sign] : undefined;
+    if (signIndex === undefined) throw new Error("Signo de cúspide inválido");
+    return norm(signIndex * 30 + (cusp.degrees ?? 0) + (cusp.minutes ?? 0) / 60);
+  });
+}
+
+function houseForLongitude(longitude: number, cusps: number[]): number {
+  return findHouse(longitude, cusps);
+}
+
+function overlayHouses(chart: Record<string, unknown>, natalCusps: number[]): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(chart)) {
+    const longitude = longitudeFromPosition(value);
+    if (longitude === null || !value || typeof value !== "object") {
+      result[key] = value;
+      continue;
+    }
+    result[key] = {
+      ...(value as Record<string, unknown>),
+      natalHouse: houseForLongitude(longitude, natalCusps),
+    };
+  }
+  return result;
+}
+
+function pointLongitude(chart: Record<string, unknown>, key: "ascendant" | "midheaven"): number | null {
+  const sign = chart[key];
+  const signIndex = typeof sign === "string" ? SIGN_INDEX[sign] : undefined;
+  if (signIndex === undefined) return null;
+  const degreeKey = key === "ascendant" ? "ascendantDegree" : "midheavenDegree";
+  const minuteKey = key === "ascendant" ? "ascendantMinutes" : "midheavenMinutes";
+  const degree = typeof chart[degreeKey] === "number" ? chart[degreeKey] as number : 0;
+  const minutes = typeof chart[minuteKey] === "number" ? chart[minuteKey] as number : 0;
+  return norm(signIndex * 30 + degree + minutes / 60);
+}
+
+function repeatedAspects(
+  natal: Record<string, unknown>,
+  solar: Record<string, unknown>,
+): string[] {
+  const natalAspects = Array.isArray(natal.aspects) ? natal.aspects : [];
+  const solarAspects = Array.isArray(solar.aspects) ? solar.aspects : [];
+  const solarKeys = new Set(solarAspects.map((item) => {
+    const aspect = item as { planet1?: string; planet2?: string; type?: string };
+    return `${aspect.planet1}|${aspect.planet2}|${aspect.type}`;
+  }));
+  return natalAspects.flatMap((item) => {
+    const aspect = item as { planet1?: string; planet2?: string; type?: string };
+    const key = `${aspect.planet1}|${aspect.planet2}|${aspect.type}`;
+    return solarKeys.has(key) ? [`${aspect.planet1} ${aspect.type} ${aspect.planet2}`] : [];
+  });
+}
+
+export async function calculateAstrologicalCycles(
+  birthDate: string,
+  birthTime: string | null | undefined,
+  birthPlace: string,
+  solarReturnLocation: string,
+  timezoneOverride?: string | null,
+  options: { includeSolarReturn: boolean; includeSecondaryProgression: boolean } = {
+    includeSolarReturn: true,
+    includeSecondaryProgression: true,
+  },
+): Promise<Record<string, unknown>> {
+  const natalChart = await calculateBirthChart(birthDate, birthTime, birthPlace, timezoneOverride);
+  const natalSunLongitude = longitudeFromPosition(natalChart.sun);
+  if (natalSunLongitude === null) throw new Error("Não foi possível determinar o Sol natal");
+
+  const natalTimezone = (natalChart.timezone as { name?: string } | undefined)?.name ?? "UTC";
+  const birthInstant = localToUT(
+    birthDate,
+    birthTime,
+    (natalChart.calculatedCoords as { lat: number }).lat,
+    (natalChart.calculatedCoords as { lon: number }).lon,
+    natalTimezone,
+  ).utcDate;
+  const currentDate = DateTime.now().setZone(natalTimezone);
+  if (!currentDate.isValid || birthInstant.valueOf() > Date.now()) {
+    throw new Error("A data de nascimento precisa estar no passado");
+  }
+
+  const cycles: Record<string, unknown> = {};
+  const natalCusps = options.includeSolarReturn || options.includeSecondaryProgression
+    ? chartCusps(natalChart)
+    : [];
+
+  if (options.includeSolarReturn) {
+    const birth = DateTime.fromISO(birthDate, { zone: natalTimezone });
+    let solarYear = currentDate.year;
+    let solarInstant = findSolarReturn(natalSunLongitude, solarYear, birth.month, birth.day);
+    if (solarInstant.valueOf() > Date.now()) {
+      solarYear -= 1;
+      solarInstant = findSolarReturn(natalSunLongitude, solarYear, birth.month, birth.day);
+    }
+
+    const returnCoords = await geocode(solarReturnLocation);
+    const returnTimezone = geoTzFind(returnCoords.lat, returnCoords.lon)[0] ?? "UTC";
+    const solarChart = await calculateChartAtInstant(solarInstant, solarReturnLocation, returnTimezone);
+    const solarCusps = chartCusps(solarChart);
+    const natalAscendantLongitude = pointLongitude(natalChart, "ascendant");
+    const natalMcLongitude = pointLongitude(natalChart, "midheaven");
+    const solarAscendantLongitude = pointLongitude(solarChart, "ascendant");
+    const solarMcLongitude = pointLongitude(solarChart, "midheaven");
+    if (
+      natalAscendantLongitude === null ||
+      natalMcLongitude === null ||
+      solarAscendantLongitude === null ||
+      solarMcLongitude === null
+    ) {
+      throw new Error("Não foi possível calcular os ângulos dos mapas");
+    }
+
+    cycles.solarReturn = {
+      ...overlayHouses(solarChart, natalCusps),
+      date: solarInstant.toISOString(),
+      location: solarReturnLocation,
+      year: solarYear,
+      rsAscendantHouse: houseForLongitude(solarAscendantLongitude, natalCusps),
+      rsMcHouse: houseForLongitude(solarMcLongitude, natalCusps),
+      natalAscendantHouse: houseForLongitude(natalAscendantLongitude, solarCusps),
+      natalMcHouse: houseForLongitude(natalMcLongitude, solarCusps),
+      repeatedAspects: repeatedAspects(natalChart, solarChart),
+    };
+  }
+
+  if (options.includeSecondaryProgression) {
+    const ageInYears = (Date.now() - birthInstant.valueOf()) / DAY_MS / TROPICAL_YEAR_DAYS;
+    const progressedInstant = new Date(birthInstant.valueOf() + ageInYears * DAY_MS);
+    const progressedChart = await calculateChartAtInstant(progressedInstant, birthPlace, natalTimezone);
+    cycles.secondaryProgression = {
+      ...overlayHouses(progressedChart, natalCusps),
+      date: progressedInstant.toISOString(),
+      ageYears: Math.floor(ageInYears),
+    };
+  }
+
+  return { ...natalChart, ...cycles };
 }

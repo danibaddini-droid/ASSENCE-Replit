@@ -6,11 +6,11 @@ import dosisRegularUrl from "@/assets/fonts/dosis-regular.ttf?url";
 import dosisSemiboldUrl from "@/assets/fonts/dosis-semibold.ttf?url";
 
 const GOLD = [180, 140, 60] as const;
-const DARK = [15, 12, 30] as const;
-const DARK_MID = [28, 22, 55] as const;
-const CREAM = [252, 248, 240] as const;
-const MUTED = [100, 90, 130] as const;
-const TEXT = [40, 32, 70] as const;
+const DARK = [35, 72, 82] as const;
+const CREAM = [248, 246, 239] as const;
+const MUTED = [105, 111, 108] as const;
+const TEXT = [35, 48, 50] as const;
+const WHITE = [255, 255, 255] as const;
 
 function formatBirthDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -94,130 +94,143 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   function addPageBackground() {
     doc.setFillColor(...CREAM);
     doc.rect(0, 0, W, H, "F");
-    doc.setFillColor(...DARK);
-    doc.rect(0, 0, W, 52, "F");
   }
 
-  function drawStars(seed = 0) {
+  function drawWordmark(x: number, y: number, large = false) {
+    doc.setFont("times", "normal");
+    doc.setFontSize(large ? 19 : 14);
+    doc.setTextColor(18, 35, 37);
+    doc.text("Assence", x, y);
+
+    const wordmarkWidth = large ? 31 : 24;
+    doc.setDrawColor(190, 174, 135);
+    doc.setLineWidth(0.2);
+    doc.line(x, y + 2, x + wordmarkWidth, y + 2);
+    doc.setFont(PDF_FONT, "normal");
+    doc.setFontSize(5.5);
+    doc.setTextColor(...MUTED);
+    doc.text("ASTROLOGIA PARA A VIDA", x + wordmarkWidth / 2, y + 6, { align: "center" });
+  }
+
+  function drawCoverArtwork() {
+    const centerX = W * 0.68;
+    const centerY = H * 0.65;
+
+    doc.setFillColor(235, 238, 229);
+    doc.ellipse(W + 12, H + 8, 110, 100, "F");
+    doc.setFillColor(226, 235, 231);
+    doc.ellipse(W + 10, H + 1, 85, 78, "F");
+    doc.setFillColor(216, 230, 231);
+    doc.ellipse(W + 7, H - 5, 60, 56, "F");
+
+    doc.setDrawColor(213, 193, 145);
+    doc.setLineWidth(0.35);
+    doc.ellipse(centerX, centerY, 78, 29, "S");
+    doc.ellipse(centerX, centerY, 88, 38, "S");
+    doc.ellipse(centerX, centerY, 98, 47, "S");
+
+    doc.setFillColor(108, 157, 165);
+    doc.circle(centerX, centerY, 39, "F");
+    doc.setFillColor(125, 174, 179);
+    doc.circle(centerX - 8, centerY - 8, 31, "F");
+    doc.setFillColor(99, 150, 160);
+    doc.circle(centerX + 7, centerY + 6, 31, "F");
+
+    doc.setFillColor(226, 201, 145);
+    doc.circle(centerX - 87, centerY + 10, 1.2, "F");
+    doc.circle(centerX + 72, centerY - 29, 1, "F");
+    doc.circle(centerX + 44, centerY + 41, 0.9, "F");
+    doc.circle(centerX - 25, centerY + 48, 0.8, "F");
     doc.setFillColor(255, 255, 255);
-    const rng = (n: number) => ((Math.sin(n * 9301 + 49297 + seed) * 49279) % 1 + 1) % 1;
-    for (let i = 0; i < 38; i++) {
-      const x = rng(i * 3) * W;
-      const y = rng(i * 3 + 1) * 52;
-      const r = rng(i * 3 + 2) * 0.6 + 0.15;
-      doc.circle(x, y, r, "F");
-    }
+    doc.circle(centerX + 39, centerY - 44, 1.4, "F");
   }
 
   function addFooter(pageNum: number, totalPages: number) {
-    doc.setFillColor(...DARK);
-    doc.rect(0, H - 12, W, 12, "F");
+    doc.setFillColor(...GOLD);
+    doc.rect(0, H - 10, W, 10, "F");
     doc.setFont(PDF_FONT, "normal");
     doc.setFontSize(7);
-    doc.setTextColor(...GOLD);
-    doc.text("Assence — Inteligência Astrológica", margin, H - 4.5);
-    doc.setTextColor(160, 150, 190);
-    doc.text(`Página ${pageNum} de ${totalPages}`, W - margin, H - 4.5, { align: "right" });
+    doc.setTextColor(...DARK);
+    doc.text("Assence — Inteligência Astrológica", margin, H - 3.5);
+    doc.text(`Página ${pageNum} de ${totalPages}`, W - margin, H - 3.5, { align: "right" });
   }
 
   // ─── Cover page ────────────────────────────────────────────────────────────
   addPageBackground();
-  drawStars();
+  drawWordmark(margin, 25, true);
 
-  // Gold top bar accent line
-  doc.setFillColor(...GOLD);
-  doc.rect(0, 52, W, 1.2, "F");
+  doc.setFont("times", "normal");
+  doc.setFontSize(27);
+  doc.setTextColor(...DARK);
+  doc.text("Análise Astrológica", margin, 76);
+  doc.setFontSize(23);
+  doc.text("Mapa Natal", margin, 89);
+  drawCoverArtwork();
 
-  // Logo mark
-  doc.setFillColor(...GOLD);
-  doc.circle(margin + 5, 20, 5, "F");
-  doc.setFillColor(...DARK);
-  doc.circle(margin + 5, 20, 3, "F");
-  doc.setFillColor(...GOLD);
-  doc.circle(margin + 5, 20, 1.2, "F");
+  // Key planet cards
+  const chart = reading.birthChart as {
+    ascendant?: string;
+    midheaven?: string;
+    sun?: { sign?: string; house?: number };
+    moon?: { sign?: string; house?: number };
+    [key: string]: unknown;
+  };
 
-  // "ASSENCE" heading
+  // ─── Birth chart overview ──────────────────────────────────────────────────
+  doc.addPage();
+  addPageBackground();
+  drawWordmark(margin, 17);
+
   doc.setFont(PDF_FONT, "bold");
-  doc.setFontSize(13);
-  doc.setTextColor(...GOLD);
-  doc.text("ASSENCE", margin + 13, 18);
+  doc.setFontSize(15);
+  doc.setTextColor(...TEXT);
+  doc.text(reading.clientName, margin, 36);
 
   doc.setFont(PDF_FONT, "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(180, 165, 210);
-  doc.text("INTELIGÊNCIA ASTROLÓGICA", margin + 13, 24);
-
-  // Date top-right
-  doc.setFontSize(7);
-  doc.setTextColor(160, 150, 190);
-  doc.text(
-    new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" }),
-    W - margin,
-    18,
-    { align: "right" }
-  );
-
-  // Client name
-  doc.setFont(PDF_FONT, "bold");
-  doc.setFontSize(26);
-  doc.setTextColor(...TEXT);
-  doc.text(reading.clientName, margin, 72);
-
-  // Subtitle
-   doc.setFont(PDF_FONT, "normal");
-  doc.setFontSize(9);
+  doc.setFontSize(7.5);
   doc.setTextColor(...MUTED);
   const subtitleParts: string[] = [formatBirthDate(reading.birthDate)];
   if (reading.birthTime) subtitleParts.push(reading.birthTime);
   if (reading.birthPlace) subtitleParts.push(reading.birthPlace);
-  doc.text(subtitleParts.join("  •  "), margin, 80);
+  doc.text(subtitleParts.join("  •  "), margin, 42);
 
-  // Divider
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(0.5);
-  doc.line(margin, 85, margin + 60, 85);
-
-  // Key planet cards
-  const chart = reading.birthChart;
   const keyCards = [
     { label: "ASCENDENTE", value: chart.ascendant ?? "—" },
     { label: "MEIO-DO-CÉU", value: chart.midheaven ?? "—" },
-    { label: "SOL", value: `${chart.sun.sign} • Casa ${chart.sun.house}` },
-    { label: "LUA", value: `${chart.moon.sign} • Casa ${chart.moon.house}` },
+    { label: "SOL", value: `${chart.sun?.sign ?? "—"} • Casa ${chart.sun?.house ?? "—"}` },
+    { label: "LUA", value: `${chart.moon?.sign ?? "—"} • Casa ${chart.moon?.house ?? "—"}` },
   ];
   const cardW = (contentW - 9) / 4;
   keyCards.forEach((card, i) => {
     const x = margin + i * (cardW + 3);
-    const y = 92;
-    doc.setFillColor(...DARK_MID);
-    doc.roundedRect(x, y, cardW, 22, 2, 2, "F");
+    const y = 50;
+    doc.setFillColor(...WHITE);
+    doc.roundedRect(x, y, cardW, 20, 1.5, 1.5, "F");
     doc.setFillColor(...GOLD);
-    doc.rect(x, y, cardW, 1.5, "F");
+    doc.rect(x, y, cardW, 1, "F");
     doc.setFont(PDF_FONT, "normal");
-    doc.setFontSize(6);
-    doc.setTextColor(...GOLD);
-    doc.text(card.label, x + cardW / 2, y + 7, { align: "center" });
+    doc.setFontSize(5.7);
+    doc.setTextColor(...MUTED);
+    doc.text(card.label, x + cardW / 2, y + 8, { align: "center" });
     doc.setFont(PDF_FONT, "bold");
-    doc.setFontSize(8.5);
-    doc.setTextColor(...CREAM);
-    const lines = doc.splitTextToSize(card.value, cardW - 4);
-    doc.text(lines[0], x + cardW / 2, y + 15, { align: "center" });
+    doc.setFontSize(8);
+    doc.setTextColor(...DARK);
+    const lines = doc.splitTextToSize(card.value, cardW - 4) as string[];
+    const firstLine = lines[0] ?? "";
+    doc.text(firstLine, x + cardW / 2, y + 15, { align: "center" });
     if (lines[1]) {
-      doc.setFontSize(7);
-      doc.text(lines[1], x + cardW / 2, y + 20, { align: "center" });
+      doc.setFontSize(6.5);
+      doc.text(lines[1], x + cardW / 2, y + 18, { align: "center" });
     }
   });
 
   // ─── Planet table ──────────────────────────────────────────────────────────
-  let yPos = 124;
+  let yPos = 81;
 
-     doc.setFont(PDF_FONT, "bold");
+  doc.setFont(PDF_FONT, "bold");
   doc.setFontSize(10);
   doc.setTextColor(...DARK);
   doc.text("Posições Planetárias", margin, yPos);
-  doc.setDrawColor(...GOLD);
-  doc.setLineWidth(0.4);
-  doc.line(margin, yPos + 2, margin + 45, yPos + 2);
   yPos += 7;
 
   const planetRows: string[][] = [];
@@ -241,23 +254,23 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
     tableWidth: contentW,
     styles: {
       font: PDF_FONT,
-      fontSize: 8,
-      cellPadding: 3,
+      fontSize: 7.5,
+      cellPadding: 1.8,
       textColor: [...TEXT],
-      lineColor: [220, 210, 240],
+      lineColor: [225, 218, 199],
       lineWidth: 0.1,
     },
     headStyles: {
-      fillColor: [...DARK_MID],
-      textColor: [...GOLD],
+      fillColor: [...GOLD],
+      textColor: [...WHITE],
       fontStyle: "bold",
-      fontSize: 7.5,
+      fontSize: 7,
     },
     alternateRowStyles: {
-      fillColor: [246, 243, 252],
+      fillColor: [238, 229, 207],
     },
     bodyStyles: {
-      fillColor: [...CREAM],
+      fillColor: [...WHITE],
     },
     columnStyles: {
       0: { fontStyle: "bold", cellWidth: 28 },
@@ -305,17 +318,17 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
         fontSize: 8,
         cellPadding: 2.5,
         textColor: [...TEXT],
-        lineColor: [220, 210, 240],
+        lineColor: [225, 218, 199],
         lineWidth: 0.1,
       },
       headStyles: {
-        fillColor: [...DARK_MID],
-        textColor: [...GOLD],
+        fillColor: [...GOLD],
+        textColor: [...WHITE],
         fontStyle: "bold",
         fontSize: 7.5,
       },
-      alternateRowStyles: { fillColor: [246, 243, 252] },
-      bodyStyles: { fillColor: [...CREAM] },
+      alternateRowStyles: { fillColor: [238, 229, 207] },
+      bodyStyles: { fillColor: [...WHITE] },
       columnStyles: {
         0: { fontStyle: "bold", cellWidth: 20, textColor: [...GOLD] },
         1: { cellWidth: 40 },
@@ -397,7 +410,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
           fontSize: 8,
           cellPadding: 2.5,
           textColor: [...TEXT],
-          lineColor: [220, 210, 240],
+          lineColor: [225, 218, 199],
           lineWidth: 0.1,
         },
         headStyles: {
@@ -406,8 +419,8 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
           fontStyle: "bold",
           fontSize: 7,
         },
-        alternateRowStyles: { fillColor: [246, 243, 252] },
-        bodyStyles: { fillColor: [...CREAM] },
+        alternateRowStyles: { fillColor: [238, 229, 207] },
+        bodyStyles: { fillColor: [...WHITE] },
         columnStyles: {
           0: { fontStyle: "bold", cellWidth: 60 },
           1: { fontStyle: "bold", cellWidth: 60 },
@@ -429,32 +442,25 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   if (reading.analysis) {
     doc.addPage();
     addPageBackground();
-    drawStars(42);
-
-    doc.setFillColor(...GOLD);
-    doc.rect(0, 52, W, 1.2, "F");
 
     // Mini header
-    doc.setFont(PDF_FONT, "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...GOLD);
-    doc.text("ASSENCE", margin, 20);
+    drawWordmark(margin, 17);
     doc.setFont(PDF_FONT, "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(180, 165, 210);
-    doc.text(reading.clientName, margin, 26);
+    doc.setFontSize(8);
+    doc.setTextColor(...MUTED);
+    doc.text(reading.clientName, margin, 28);
 
     doc.setFont(PDF_FONT, "bold");
     doc.setFontSize(14);
     doc.setTextColor(...TEXT);
-    doc.text("Análise Astrológica", margin, 65);
+    doc.text("Análise Astrológica", margin, 48);
 
     doc.setDrawColor(...GOLD);
     doc.setLineWidth(0.5);
-    doc.line(margin, 69, margin + 48, 69);
+    doc.line(margin, 52, margin + 48, 52);
 
     const sections = parseMarkdownSections(reading.analysis);
-    let y = 78;
+    let y = 61;
     const lineH = 5.2;
     const sectionGap = 5.2;
     const headingGap = 3.2;
@@ -497,8 +503,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
               // repeat mini header on continuation pages
               doc.setFont(PDF_FONT, "bold");
               doc.setFontSize(8);
-              doc.setTextColor(...GOLD);
-              doc.text("ASSENCE", margin, 12);
+              drawWordmark(margin, 15);
               doc.setFont(PDF_FONT, "normal");
               doc.setFontSize(8.5);
               doc.setTextColor(...TEXT);
@@ -519,6 +524,7 @@ export async function exportReadingPDF(reading: Reading): Promise<void> {
   // ─── Footers on all pages ──────────────────────────────────────────────────
   const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
+    if (p === 1) continue;
     doc.setPage(p);
     addFooter(p, totalPages);
   }

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { BirthChart } from "./birthChart";
+import type { CreateReadingBodyAnalysisType } from "./createReadingBodyAnalysisType";
 
 export interface CreateReadingBody {
   clientName: string;
@@ -26,4 +27,10 @@ export interface CreateReadingBody {
    * @nullable
    */
   timezoneOverride?: string | null;
+  analysisType?: CreateReadingBodyAnalysisType;
+  /**
+   * Location where the client will spend their birthday; required for solar-return and integrated analyses.
+   * @nullable
+   */
+  solarReturnLocation?: string | null;
 }

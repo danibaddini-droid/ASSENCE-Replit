@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useCreateReading } from "@workspace/api-client-react";
+import type { BirthChart } from "@workspace/api-zod";
 import { SIGNS, PLANETS, ASPECT_TYPES, HOUSES } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { PlusCircle, Trash2, Sparkles, ChevronDown, ChevronUp, User, Star, Home, Wand2, SlidersHorizontal, Globe } from "lucide-react";
+import { PlusCircle, Trash2, Sparkles, ChevronDown, ChevronUp, User, Star, Home, Wand2, SlidersHorizontal, Globe, MoonStar, Sun, Orbit, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+type AnalysisType = "natal" | "solar-return" | "secondary-progression" | "integrated";
+
+const ANALYSIS_OPTIONS: Array<{
+  id: AnalysisType;
+  title: string;
+  description: string;
+  icon: typeof MoonStar;
+}> = [
+  { id: "natal", title: "Mapa Natal", description: "Leitura completa do mapa de nascimento.", icon: MoonStar },
+  { id: "solar-return", title: "Revolução Solar", description: "Ciclo anual no local do aniversário.", icon: Sun },
+  { id: "secondary-progression", title: "Progressão Secundária", description: "Desenvolvimento interno e Lua progressada.", icon: Orbit },
+  { id: "integrated", title: "Leitura Integrada", description: "Os três mapas com previsões para 12 meses.", icon: Brain },
+];
+
+function initialAnalysisType(): AnalysisType {
+  const type = new URLSearchParams(window.location.search).get("tipo");
+  return ANALYSIS_OPTIONS.some((option) => option.id === type)
+    ? type as AnalysisType
+    : "natal";
+}
 
 const TZ_AUTO = "__auto__";
 
@@ -120,12 +142,14 @@ export default function NewReading() {
   const { toast } = useToast();
   const createReading = useCreateReading();
 
+  const [analysisType, setAnalysisType] = useState<AnalysisType>(initialAnalysisType);
   const [mode, setMode] = useState<"auto" | "manual">("auto");
 
   const [clientName, setClientName] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [birthTime, setBirthTime] = useState("");
   const [birthPlace, setBirthPlace] = useState("");
+  const [solarReturnLocation, setSolarReturnLocation] = useState("");
   const [timezoneOverride, setTimezoneOverride] = useState(TZ_AUTO);
 
   const [ascendant, setAscendant] = useState("Áries");
@@ -143,6 +167,7 @@ export default function NewReading() {
   const [showPlanets, setShowPlanets] = useState(true);
   const [showCusps, setShowCusps] = useState(false);
   const [showAspects, setShowAspects] = useState(false);
+  const requiresSolarReturnLocation = analysisType === "solar-return" || analysisType === "integrated";
 
   function updatePlanet(id: string, field: keyof PlanetEntry, value: string | number | boolean) {
     setPlanets((prev) => ({ ...prev, [id]: { ...prev[id], [field]: value } }));
@@ -170,9 +195,17 @@ export default function NewReading() {
       toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
       return;
     }
+    if (requiresSolarReturnLocation && !solarReturnLocation.trim()) {
+      toast({ title: "Informe o local do aniversário", description: "Esse local é necessário para calcular a Revolução Solar.", variant: "destructive" });
+      return;
+    }
+    if (analysisType !== "natal" && !birthTime) {
+      toast({ title: "Informe a hora de nascimento", description: "Ela é necessária para calcular os ângulos e as casas dos mapas derivados.", variant: "destructive" });
+      return;
+    }
 
     try {
-      if (mode === "auto") {
+      if (mode === "auto" || analysisType !== "natal") {
         const result = await createReading.mutateAsync({
           data: {
             clientName,
@@ -181,58 +214,110 @@ export default function NewReading() {
             birthPlace,
             autoCalculate: true,
             timezoneOverride: timezoneOverride && timezoneOverride !== TZ_AUTO ? timezoneOverride : null,
+            analysisType,
+            solarReturnLocation: requiresSolarReturnLocation ? solarReturnLocation.trim() : undefined,
           },
         });
-        toast({ title: "Mapa criado!", description: "A IA está calculando as posições e gerando a análise…" });
+        toast({ title: "Leitura criada!", description: "Os mapas estão sendo calculados e a análise será gerada…" });
         navigate(`/mapa/${result.id}`);
       } else {
+        const birthChart: BirthChart = {
+          ascendant,
+          midheaven,
+          sun: {
+            sign: planets.sun.sign,
+            house: planets.sun.house,
+            degree: toDecimal(planets.sun.degrees, planets.sun.minutes),
+            retrograde: planets.sun.retrograde,
+          },
+          moon: {
+            sign: planets.moon.sign,
+            house: planets.moon.house,
+            degree: toDecimal(planets.moon.degrees, planets.moon.minutes),
+            retrograde: planets.moon.retrograde,
+          },
+          ...Object.fromEntries(
+            PLANETS.filter((p) => p.id !== "sun" && p.id !== "moon").map((p) => [
+              p.id,
+              {
+                sign: planets[p.id].sign,
+                house: planets[p.id].house,
+                degree: toDecimal(planets[p.id].degrees, planets[p.id].minutes),
+                retrograde: planets[p.id].retrograde,
+              },
+            ])
+          ),
+          houseCusps: houseCusps.map((c, i) => ({
+            house: i + 1,
+            sign: c.sign,
+            degrees: c.degrees,
+            minutes: c.minutes,
+          })),
+          aspects: aspects.map((a) => ({ ...a })),
+        };
+
         const result = await createReading.mutateAsync({
           data: {
             clientName,
             birthDate,
             birthTime: birthTime || undefined,
             birthPlace,
-            birthChart: {
-              ascendant,
-              midheaven,
-              ...Object.fromEntries(
-                PLANETS.map((p) => [
-                  p.id,
-                  {
-                    sign: planets[p.id].sign,
-                    house: planets[p.id].house,
-                    degree: toDecimal(planets[p.id].degrees, planets[p.id].minutes),
-                    retrograde: planets[p.id].retrograde,
-                  },
-                ])
-              ),
-              houseCusps: houseCusps.map((c, i) => ({
-                house: i + 1,
-                sign: c.sign,
-                degrees: c.degrees,
-                minutes: c.minutes,
-              })),
-              aspects,
-            },
+            birthChart,
+            analysisType,
           },
         });
         toast({ title: "Mapa criado com sucesso!", description: "A análise está sendo gerada…" });
         navigate(`/mapa/${result.id}`);
       }
-    } catch {
-      toast({ title: "Erro ao criar mapa", variant: "destructive" });
+    } catch (error) {
+      toast({
+        title: "Erro ao criar mapa",
+        description: error instanceof Error ? error.message : "Não foi possível calcular a leitura com os dados informados.",
+        variant: "destructive",
+      });
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-500 max-w-4xl">
       <div>
-        <h1 className="text-3xl font-sans text-primary mb-2">Novo Mapa Natal</h1>
-        <p className="text-muted-foreground">Insira os dados para gerar a análise astrológica profunda pelo método Assence.</p>
+        <h1 className="text-3xl font-sans text-primary mb-2">Nova leitura astrológica</h1>
+        <p className="text-muted-foreground">Escolha os mapas que deseja analisar e informe os dados de nascimento.</p>
       </div>
 
-      {/* Modo: Auto / Manual */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {ANALYSIS_OPTIONS.map((option) => {
+          const Icon = option.icon;
+          const isSelected = analysisType === option.id;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => {
+                setAnalysisType(option.id);
+                if (option.id !== "natal") setMode("auto");
+              }}
+              className={cn(
+                "rounded-xl border p-4 text-left transition-colors",
+                isSelected ? "border-primary/60 bg-primary/10" : "border-border/40 bg-card/30 hover:border-border/70",
+              )}
+            >
+              <Icon className={cn("mb-3 h-5 w-5", isSelected ? "text-primary" : "text-muted-foreground")} />
+              <p className="font-semibold text-sm">{option.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{option.description}</p>
+            </button>
+          );
+        })}
+      </div>
+
+      {analysisType === "integrated" && (
+        <p className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-primary">
+          A leitura integrada combina mapa natal, Revolução Solar, Progressão Secundária e previsões mensais baseadas nos trânsitos calculados.
+        </p>
+      )}
+
+      {/* Modo: Auto / Manual — manual chart entry is available for natal-only readings. */}
+      {analysisType === "natal" && <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={() => setMode("auto")}
@@ -266,7 +351,7 @@ export default function NewReading() {
             <p className="text-xs text-muted-foreground mt-0.5">Insira as posições planetárias manualmente para maior precisão</p>
           </div>
         </button>
-      </div>
+      </div>}
 
       {/* Dados da pessoa */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
@@ -288,15 +373,36 @@ export default function NewReading() {
               className="bg-background/50" required />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="birthTime">Hora de nascimento</Label>
+            <Label htmlFor="birthTime">Hora de nascimento {analysisType !== "natal" && "*"}</Label>
             <Input id="birthTime" type="time" value={birthTime} onChange={(e) => setBirthTime(e.target.value)}
-              className="bg-background/50" />
+              className="bg-background/50" required={analysisType !== "natal"} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="birthPlace">Local de nascimento *</Label>
             <Input id="birthPlace" value={birthPlace} onChange={(e) => setBirthPlace(e.target.value)}
               placeholder="São Paulo, SP, Brasil" className="bg-background/50" required />
           </div>
+          {requiresSolarReturnLocation && (
+            <div className="md:col-span-2 space-y-1.5">
+              <Label htmlFor="solarReturnLocation">Local onde passará o aniversário *</Label>
+              <Input
+                id="solarReturnLocation"
+                value={solarReturnLocation}
+                onChange={(e) => setSolarReturnLocation(e.target.value)}
+                placeholder="Ex.: Lisboa, Portugal"
+                className="bg-background/50"
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                A Revolução Solar depende do local onde a pessoa estará no momento do retorno do Sol.
+              </p>
+            </div>
+          )}
+          {analysisType !== "natal" && (
+            <p className="md:col-span-2 -mt-2 text-xs text-muted-foreground">
+              Para calcular com precisão os ângulos e as casas da Revolução Solar e das progressões, a hora de nascimento é obrigatória.
+            </p>
+          )}
           {mode === "auto" && (
             <div className="md:col-span-2 space-y-1.5">
               <Label htmlFor="timezoneOverride" className="flex items-center gap-1.5">

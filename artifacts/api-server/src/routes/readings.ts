@@ -12,7 +12,12 @@ import {
   GetReadingsStatsResponse,
 } from "@workspace/api-zod";
 import { ASSENCE_SYSTEM_PROMPT, buildChartPrompt, sanitizeAnalysis } from "../lib/assence";
-import { calculateBirthChart, calculateTodayTransits } from "../lib/ephemeris";
+import {
+  calculateAstrologicalCycles,
+  calculateBirthChart,
+  calculateMonthlyTransitForecast,
+  calculateTodayTransits,
+} from "../lib/ephemeris";
 import { sendNewClientNotification } from "../lib/email";
 import { streamGeminiText } from "../lib/gemini";
 
@@ -86,23 +91,56 @@ router.post("/readings", async (req, res): Promise<void> => {
   let birthChart: Record<string, unknown> = (parsed.data.birthChart as Record<string, unknown>) ?? {};
   let autoCalculate = parsed.data.autoCalculate ?? false;
   let ephemerisCalculated = false;
+  const analysisType = parsed.data.analysisType ?? "natal";
 
-  if (parsed.data.autoCalculate) {
+  if (analysisType !== "natal" && !parsed.data.birthTime?.trim()) {
+    res.status(400).json({ error: "Informe a hora de nascimento para calcular os ângulos e as casas dos mapas derivados." });
+    return;
+  }
+  if (
+    (analysisType === "solar-return" || analysisType === "integrated") &&
+    !parsed.data.solarReturnLocation?.trim()
+  ) {
+    res.status(400).json({ error: "Informe o local onde a pessoa passará o aniversário para calcular a Revolução Solar." });
+    return;
+  }
+
+  if (parsed.data.autoCalculate || analysisType !== "natal") {
     try {
-      const calculated = await calculateBirthChart(
-        parsed.data.birthDate,
-        parsed.data.birthTime ?? null,
-        parsed.data.birthPlace,
-        parsed.data.timezoneOverride ?? null
-      );
+      const calculated = analysisType === "solar-return" ||
+        analysisType === "secondary-progression" ||
+        analysisType === "integrated"
+        ? await calculateAstrologicalCycles(
+            parsed.data.birthDate,
+            parsed.data.birthTime ?? null,
+            parsed.data.birthPlace,
+            parsed.data.solarReturnLocation ?? parsed.data.birthPlace,
+            parsed.data.timezoneOverride ?? null,
+            {
+              includeSolarReturn: analysisType !== "secondary-progression",
+              includeSecondaryProgression: analysisType !== "solar-return",
+            },
+          )
+        : await calculateBirthChart(
+            parsed.data.birthDate,
+            parsed.data.birthTime ?? null,
+            parsed.data.birthPlace,
+            parsed.data.timezoneOverride ?? null
+          );
       birthChart = calculated;
       autoCalculate = false;
       ephemerisCalculated = true;
       req.log.info({ birthPlace: parsed.data.birthPlace }, "Ephemeris calculation succeeded");
     } catch (err) {
+      if (analysisType !== "natal") {
+        req.log.error({ err, analysisType }, "Derived chart calculation failed");
+        res.status(422).json({ error: "Não foi possível calcular os mapas solicitados com os dados informados." });
+        return;
+      }
       req.log.warn({ err }, "Ephemeris calculation failed, falling back to AI auto-calculate");
     }
   }
+  birthChart = { ...birthChart, analysisType };
 
   const [reading] = await db
     .insert(readingsTable)
@@ -121,7 +159,7 @@ router.post("/readings", async (req, res): Promise<void> => {
 
   res.status(201).json(GetReadingResponse.parse(serializeDates(reading)));
 
-  generateAnalysis(reading.id, { ...parsed.data, birthChart, autoCalculate, ephemerisCalculated }).catch((err) => {
+  generateAnalysis(reading.id, { ...parsed.data, analysisType, birthChart, autoCalculate, ephemerisCalculated }).catch((err) => {
     req.log.error({ err, readingId: reading.id }, "Failed to generate analysis");
   });
 
@@ -137,7 +175,7 @@ router.post("/readings", async (req, res): Promise<void> => {
   });
 });
 
-const REQUIRED_ANALYSIS_SECTIONS = Array.from({ length: 27 }, (_, index) => index + 1);
+const REQUIRED_ANALYSIS_SECTIONS = Array.from({ length: 28 }, (_, index) => index + 1);
 
 type AnalysisMessage = {
   role: "system" | "user" | "assistant";
@@ -154,6 +192,7 @@ const ANALYSIS_BLOCKS = [
   { start: 1, end: 10 },
   { start: 11, end: 20 },
   { start: 21, end: 27 },
+  { start: 28, end: 28 },
 ] as const;
 
 const TRANSIT_SYSTEM_PROMPT = `Você é a Assence, uma inteligência astrológica de elite.
@@ -331,6 +370,7 @@ async function generateAnalysis(
     autoCalculate?: boolean | null;
     birthChart?: unknown;
     ephemerisCalculated?: boolean;
+    analysisType?: "natal" | "solar-return" | "secondary-progression" | "integrated";
   }
 ) {
   try {
@@ -339,7 +379,15 @@ async function generateAnalysis(
       .set({ analysisStatus: "generating" })
       .where(eq(readingsTable.id, readingId));
 
-    const userPrompt = buildChartPrompt(data);
+    const currentChart = (data.birthChart as Record<string, unknown> | null) ?? {};
+    const analysisType = data.analysisType ?? "natal";
+    const userPrompt = buildChartPrompt({
+      ...data,
+      analysisType,
+      monthlyTransits: analysisType === "integrated"
+        ? calculateMonthlyTransitForecast(currentChart)
+        : undefined,
+    });
 
     const blockResults = await Promise.all(
       ANALYSIS_BLOCKS.map((block, index) =>
@@ -435,6 +483,8 @@ router.post("/readings/:id/regenerate", async (req, res): Promise<void> => {
     clientAge: reading.clientAge,
     birthChart: reading.birthChart,
     ephemerisCalculated: !!(reading.birthChart as Record<string, unknown>)?.ascendant,
+    analysisType: ((reading.birthChart as Record<string, unknown>)?.analysisType as
+      "natal" | "solar-return" | "secondary-progression" | "integrated" | undefined) ?? "natal",
   }).catch((err) => {
     req.log.error({ err, readingId: reading.id }, "Failed to regenerate analysis");
   });
@@ -481,12 +531,35 @@ router.post("/readings/:id/recalculate", async (req, res): Promise<void> => {
   const timezoneOverride = body.success ? (body.data.timezoneOverride ?? null) : null;
 
   try {
-    const newChart = await calculateBirthChart(
-      reading.birthDate,
-      reading.birthTime ?? null,
-      reading.birthPlace,
-      timezoneOverride
-    );
+    const previousChart = reading.birthChart as Record<string, unknown>;
+    const analysisType = previousChart.analysisType;
+    const isDerived = analysisType === "solar-return" ||
+      analysisType === "secondary-progression" ||
+      analysisType === "integrated";
+    const solarReturn = previousChart.solarReturn as { location?: string } | undefined;
+    if ((analysisType === "solar-return" || analysisType === "integrated") && !solarReturn?.location) {
+      res.status(422).json({ error: "O local do aniversário não está salvo. Crie uma nova leitura para recalcular a Revolução Solar." });
+      return;
+    }
+    const newChart = isDerived
+      ? await calculateAstrologicalCycles(
+          reading.birthDate,
+          reading.birthTime ?? null,
+          reading.birthPlace,
+          solarReturn?.location ?? reading.birthPlace,
+          timezoneOverride,
+          {
+            includeSolarReturn: analysisType !== "secondary-progression",
+            includeSecondaryProgression: analysisType !== "solar-return",
+          },
+        )
+      : await calculateBirthChart(
+          reading.birthDate,
+          reading.birthTime ?? null,
+          reading.birthPlace,
+          timezoneOverride
+        );
+    newChart.analysisType = isDerived ? analysisType : "natal";
     req.log.info({ id, birthPlace: reading.birthPlace, timezoneOverride }, "Ephemeris recalculation succeeded");
 
     const [updated] = await db

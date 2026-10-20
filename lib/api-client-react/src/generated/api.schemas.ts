@@ -72,6 +72,16 @@ export interface UpdateReadingBody {
   deliveryStatus?: UpdateReadingBodyDeliveryStatus;
 }
 
+export type CreateReadingBodyAnalysisType =
+  (typeof CreateReadingBodyAnalysisType)[keyof typeof CreateReadingBodyAnalysisType];
+
+export const CreateReadingBodyAnalysisType = {
+  natal: "natal",
+  "solar-return": "solar-return",
+  "secondary-progression": "secondary-progression",
+  integrated: "integrated",
+} as const;
+
 export interface CreateReadingBody {
   clientName: string;
   birthDate: string;
@@ -91,6 +101,12 @@ export interface CreateReadingBody {
    * @nullable
    */
   timezoneOverride?: string | null;
+  analysisType?: CreateReadingBodyAnalysisType;
+  /**
+   * Location where the client will spend their birthday; required for solar-return and integrated analyses.
+   * @nullable
+   */
+  solarReturnLocation?: string | null;
 }
 
 export interface RecalculateReadingBody {

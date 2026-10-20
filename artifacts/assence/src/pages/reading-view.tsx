@@ -281,7 +281,39 @@ export default function ReadingView() {
     );
   }
 
-  const chart = reading.birthChart;
+  const chart = reading.birthChart as {
+    ascendant: string;
+    midheaven: string;
+    sun: { sign: string; house: number; degree?: number | null; retrograde?: boolean | null };
+    moon: { sign: string; house: number; degree?: number | null; retrograde?: boolean | null };
+    houseCusps?: Array<{ house: number; sign: string; degrees?: number | null; minutes?: number | null }>;
+    aspects?: Array<{ planet1: string; planet2: string; type: string; orb?: number | null }>;
+    timezone?: { name: string; utcOffsetMin: number };
+    solarReturn?: Record<string, unknown>;
+    secondaryProgression?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
+  const solarReturn = chart.solarReturn as {
+    date?: string;
+    location?: string;
+    year?: number;
+    ascendant?: string;
+    midheaven?: string;
+    sun?: { sign?: string; natalHouse?: number };
+    moon?: { sign?: string; natalHouse?: number };
+    rsAscendantHouse?: number;
+    rsMcHouse?: number;
+    natalAscendantHouse?: number;
+    natalMcHouse?: number;
+  } | undefined;
+  const secondaryProgression = chart.secondaryProgression as {
+    date?: string;
+    ageYears?: number;
+    ascendant?: string;
+    midheaven?: string;
+    sun?: { sign?: string; natalHouse?: number };
+    moon?: { sign?: string; natalHouse?: number };
+  } | undefined;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-4xl pb-12">
@@ -300,10 +332,16 @@ export default function ReadingView() {
             {reading.birthTime && <><span>•</span><span>{reading.birthTime}</span></>}
             {reading.birthPlace && <><span>•</span><span>{reading.birthPlace}</span></>}
             {reading.clientEmail && <><span>•</span><span className="text-xs opacity-70">{reading.clientEmail}</span></>}
-            {(reading.birthChart as Record<string,unknown>)?.timezone && (() => {
-              const tz = (reading.birthChart as Record<string,unknown>).timezone as {name:string;utcOffsetMin:number};
+            {(() => {
+              const tz = (reading.birthChart as { timezone?: { name?: string; utcOffsetMin?: number } } | undefined)?.timezone;
+              if (!tz || typeof tz.utcOffsetMin !== "number" || !tz.name) return null;
               const h = tz.utcOffsetMin / 60;
-              return <><span>•</span><span className="text-xs opacity-70">{tz.name} (UTC{h >= 0 ? "+" : ""}{h})</span></>;
+              return (
+                <>
+                  <span>•</span>
+                  <span className="text-xs opacity-70">{tz.name} (UTC{h >= 0 ? "+" : ""}{h})</span>
+                </>
+              );
             })()}
           </div>
         </div>
@@ -402,6 +440,40 @@ export default function ReadingView() {
         <InfoCard icon={Sparkles} label="Sol" value={`${chart.sun.sign} • Casa ${chart.sun.house}`} />
         <InfoCard icon={MoonStar} label="Lua" value={`${chart.moon.sign} • Casa ${chart.moon.house}`} />
       </div>
+
+      {(solarReturn || secondaryProgression) && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {solarReturn && (
+            <CycleSummary
+              title={`Revolução Solar${solarReturn.year ? ` ${solarReturn.year}` : ""}`}
+              subtitle={solarReturn.location ? `Local do aniversário: ${solarReturn.location}` : undefined}
+              items={[
+                ["Retorno solar", solarReturn.date ? format(new Date(solarReturn.date), "dd/MM/yyyy HH:mm", { locale: ptBR }) : "—"],
+                ["Ascendente / MC", `${solarReturn.ascendant ?? "—"} / ${solarReturn.midheaven ?? "—"}`],
+                ["Sol / Lua", `${solarReturn.sun?.sign ?? "—"} / ${solarReturn.moon?.sign ?? "—"}`],
+                ["Ascendente da RS no mapa natal", solarReturn.rsAscendantHouse ? `Casa ${solarReturn.rsAscendantHouse}` : "—"],
+                ["MC da RS no mapa natal", solarReturn.rsMcHouse ? `Casa ${solarReturn.rsMcHouse}` : "—"],
+                ["Ascendente natal na RS", solarReturn.natalAscendantHouse ? `Casa ${solarReturn.natalAscendantHouse}` : "—"],
+                ["MC natal na RS", solarReturn.natalMcHouse ? `Casa ${solarReturn.natalMcHouse}` : "—"],
+              ]}
+            />
+          )}
+          {secondaryProgression && (
+            <CycleSummary
+              title="Progressão Secundária"
+              subtitle={secondaryProgression.ageYears !== undefined ? `Ciclo progressado aos ${secondaryProgression.ageYears} anos` : undefined}
+              items={[
+                ["Data de referência", secondaryProgression.date ? format(new Date(secondaryProgression.date), "dd/MM/yyyy", { locale: ptBR }) : "—"],
+                ["Lua progressada", secondaryProgression.moon?.sign ?? "—"],
+                ["Sol progressado", secondaryProgression.sun?.sign ?? "—"],
+                ["Ascendente progressado", secondaryProgression.ascendant ?? "—"],
+                ["MC progressado", secondaryProgression.midheaven ?? "—"],
+                ["Casa natal da Lua progressada", secondaryProgression.moon?.natalHouse ? `Casa ${secondaryProgression.moon.natalHouse}` : "—"],
+              ]}
+            />
+          )}
+        </div>
+      )}
 
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="border-b border-border/50">
@@ -743,6 +815,33 @@ function AspectRow({ aspect }: { aspect: { planet1: string; planet2: string; typ
       <span className="w-24 shrink-0 text-foreground/80 truncate">{aspect.planet2}</span>
       <span className="ml-auto text-xs text-muted-foreground font-mono shrink-0">{aspect.orb.toFixed(1)}°</span>
     </div>
+  );
+}
+
+function CycleSummary({
+  title,
+  subtitle,
+  items,
+}: {
+  title: string;
+  subtitle?: string;
+  items: Array<[string, string]>;
+}) {
+  return (
+    <Card className="border-primary/20 bg-card/50">
+      <CardHeader className="border-b border-border/40 pb-3">
+        <CardTitle className="font-sans text-lg text-primary">{title}</CardTitle>
+        {subtitle && <p className="text-xs text-muted-foreground">{subtitle}</p>}
+      </CardHeader>
+      <CardContent className="grid gap-x-4 gap-y-3 pt-4 sm:grid-cols-2">
+        {items.map(([label, value]) => (
+          <div key={label} className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+            <p className="mt-0.5 truncate text-sm font-medium text-foreground">{value}</p>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 

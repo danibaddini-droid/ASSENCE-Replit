@@ -1,2 +1,22 @@
 export * from "./generated/api";
-export * from "./generated/types";
+export type {
+  Aspect,
+  BirthChart,
+  ClientTransit,
+  ClientTransitTransitsItem,
+  Conversation,
+  ConversationWithMessages,
+  DailyTransitPlanet,
+  DailyTransitsResult,
+  ErrorResponse,
+  HealthStatus,
+  HouseCusp,
+  Message,
+  PlanetPosition,
+  Reading,
+  ReadingBirthChart,
+  ReadingDeliveryStatus,
+  ReadingsStats,
+  SendOpenaiMessageBody,
+  UpdateReadingBodyDeliveryStatus,
+} from "./generated/types";

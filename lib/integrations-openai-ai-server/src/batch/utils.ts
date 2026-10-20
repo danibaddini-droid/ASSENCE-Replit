@@ -81,7 +81,13 @@ export async function batchProcess<T, R>(
             throw abortErr;
           }
         },
-        { retries, minTimeout, maxTimeout, factor: 2, shouldRetry: (err) => err.name !== "AbortError" }
+        {
+          retries,
+          minTimeout,
+          maxTimeout,
+          factor: 2,
+          shouldRetry: ({ error }) => error.name !== "AbortError",
+        }
       )
     )
   );
@@ -114,11 +120,9 @@ export async function batchProcessWithSSE<T, R>(
           minTimeout,
           maxTimeout,
           factor: 2,
-          onFailedAttempt: (error) => {
+          onFailedAttempt: ({ error }) => {
             if (!isRateLimitError(error)) {
-              const abortErr = new Error(
-                error instanceof Error ? error.message : String(error)
-              );
+              const abortErr = new Error(error.message);
               (abortErr as Error & { name: string }).name = "AbortError";
               throw abortErr;
             }

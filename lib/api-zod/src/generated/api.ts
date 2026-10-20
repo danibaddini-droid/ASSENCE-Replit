@@ -40,6 +40,8 @@ export const ListReadingsResponse = zod.array(ListReadingsResponseItem);
 /**
  * @summary Create a new astrological reading
  */
+export const createReadingBodyAnalysisTypeDefault = `natal`;
+
 export const CreateReadingBody = zod.object({
   clientName: zod.string(),
   birthDate: zod.string(),
@@ -188,6 +190,15 @@ export const CreateReadingBody = zod.object({
     .nullish()
     .describe(
       'IANA timezone name (e.g. \"UTC\", \"America\/New_York\"). If null, auto-detected from birth place coordinates.',
+    ),
+  analysisType: zod
+    .enum(["natal", "solar-return", "secondary-progression", "integrated"])
+    .default(createReadingBodyAnalysisTypeDefault),
+  solarReturnLocation: zod
+    .string()
+    .nullish()
+    .describe(
+      "Location where the client will spend their birthday; required for solar-return and integrated analyses.",
     ),
 });
 

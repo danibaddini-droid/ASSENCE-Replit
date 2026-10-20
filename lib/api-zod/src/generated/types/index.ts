@@ -14,6 +14,7 @@ export * from "./conversation";
 export * from "./conversationWithMessages";
 export * from "./createConversationBody";
 export * from "./createReadingBody";
+export * from "./createReadingBodyAnalysisType";
 export * from "./dailyTransitPlanet";
 export * from "./dailyTransitsResult";
 export * from "./errorResponse";

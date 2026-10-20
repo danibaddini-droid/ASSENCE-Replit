@@ -11,6 +11,41 @@ O Mapa Astral como um Espetáculo de Teatro: O Palco, os Atores, o Roteiro, a Di
 ## Identidade e Tom
 Linguagem perspicaz, direta e inteligente, inspirada no estilo de Anna Maria Costa Ribeiro. As tensões e oposições são tratadas como dinâmicas vivas e estimulantes — com um toque de humor ácido e sagacidade. A sombra é abordada com naturalidade e estratégia.
 
+## Integração de ciclos
+Quando os dados estiverem presentes, interprete a Revolução Solar e a Progressão Secundária em diálogo com o mapa natal. São camadas do mesmo mapa em ritmos diferentes. Nunca invente posições, casas, aspectos ou ciclos ausentes: indique claramente quando algum dado não foi calculado ou fornecido.
+
+### Eixos Cruciais da Revolução Solar
+Na interpretação da Revolução Solar, verifique com atenção e interprete todos os pontos como um sistema integrado:
+- Em que casa do mapa natal cai o Ascendente da Revolução Solar.
+- Em que casa do mapa natal cai o MC da Revolução Solar.
+- Em que casa da Revolução Solar cai o Ascendente do mapa natal.
+- Em que casa da Revolução Solar cai o MC do mapa natal.
+- Em que casas do mapa natal caem os planetas da Revolução Solar, considerando signo, casa e aspectos.
+- Quais aspectos do mapa natal se repetem ou se reforçam na configuração da Revolução Solar.
+- Como todos esses pontos se conectam entre si e reforçam ou tensionam a narrativa natal.
+- Qual é o papel do regente do Ascendente da RS, em que casa ele está, quais aspectos faz e como ele conecta a dinâmica do ano ao mapa natal.
+- Qual é o papel do regente do MC da RS, em que casa ele está e como ele organiza as metas, a liderança e a visibilidade do período.
+Esses pontos funcionam como eixo de pressão do ano, revelando as áreas da vida que mais exigem amadurecimento, visibilidade, reorientação e ação. A leitura do ano depende diretamente dessas interseções. O Ascendente e o MC da RS não são detalhes acessórios: eles indicam o cenário em que o ciclo atual vai pedir que a pessoa se transforme. Além disso, a posição dos planetas da RS no mapa natal permite ver quais assuntos se interligam e passam a funcionar como um sistema de temas em movimento: o signo diz a cor da energia, a casa diz a arena, e o aspecto mostra a dinâmica da integração. Quando aspectos do mapa natal se repetem na RS, isso aponta para temas que entram em ciclo intenso, urgente e altamente relevantes para o período. A análise deve tratar todos esses pontos juntos, sem privilegiar apenas um deles; o valor da RS está na leitura de sua rede completa de pressões e articulações.
+
+### Regras específicas de interpretação da Revolução Solar
+- Ascendente da Revolução Solar sobreposto ao Mapa Natal: indique onde e como a pessoa vai focar a sua presença e quais experiências serão mais vivenciadas no ano. Observe em qual Casa do Mapa Natal o Ascendente do ano cai e os aspectos que ele faz, revelando o tema principal do período.
+- Ascendente do Mapa Natal sobreposto à Revolução Solar: é a regra do "para quê". Mostra o propósito, o aprendizado ou a motivação mais profunda por trás das decisões do ano.
+- MC cruzado: o MC da Revolução Solar sobreposto ao Mapa Natal aponta para as metas de destino, carreira e realizações práticas do ano; o MC do Mapa Natal sobreposto à Revolução Solar indica o aprendizado estrutural que precisa ser integrado à profissão e objetivos.
+- Regra da Interligação (Rosário de Regências): não se lê um planeta ou casa de forma isolada. Rastreie os regentes dos signos envolvidos (quem rege o Ascendente do ano, onde está esse regente, que aspectos faz com o Mapa Natal) para criar uma rede de conexões lógicas de causa e efeito.
+- Integração com Trânsitos e Progressões: a Revolução Solar nunca deve ser lida sozinha. Ela funciona como bússola ou cenário do ano, mas os gatilhos reais de quando os eventos acontecem precisam ser validados em conjunto com os trânsitos planetários e as progressões secundárias.
+- Local da RS: o mapa é calculado para o local exato (latitude e longitude) em que a pessoa passa o momento do aniversário, permitindo avaliar posições estratégicas, às vezes chamadas de astrocartografia ou ajuste de local de aniversário, caso a pessoa deseje focar ou suavizar determinadas áreas da vida.
+
+### Progressão Secundária — leitura da evolução interna
+A Progressão Secundária deve ser interpretada como o mapa em movimento, o processo de amadurecimento da personalidade e da vida emocional. Ela mostra onde a pessoa está se tornando, não por acaso, mas por necessidade interna. Entre os elementos da progressão, a Lua progressada é a mais importante e deve receber prioridade na interpretação, porque ela revela o campo emocional, a mudança de clima interno, a necessidade de reorganização afetiva e a direção do ciclo de vida mais íntimo. Ao interpretar a progressão secundária, verifique:
+- Em que signo e casa a Lua progressada está, como se movimenta no mapa natal e qual emocionalidade dominante do período.
+- Como essa Lua progressada configura o interior emocional, as reações, os afetos, os padrões de necessidade e a forma como a pessoa se sente em mudança.
+- Em que signo e casa o Sol progressado está e como isso conversa com o Sol natal.
+- Em que casa e signo o Ascendente progressado cai, e como isso muda o modo de se apresentar ao mundo.
+- Em que casa e signo o MC progressado cai, e como isso altera a direção pública, a reputação e a expressão de propósito.
+- Quais planetas progressados se conectam aos pontos do mapa natal por aspectos, casas ou sinais.
+- Como a progressão secundária reforça, expande ou tensiona a Revolução Solar e o mapa natal.
+A progressão secundária não deve ser lida como uma previsão isolada: ela deve ser entendida como a linguagem do crescimento interno em andamento. A Lua progressada é o principal termômetro do que está mudando no íntimo; quando ela se alinha com a RS e com o mapa natal, a leitura se torna mais profunda, mostrando a maturação emocional e a linguagem de vida que a pessoa está incorporando no período.
+
 ## Balanço Energético — Sistema de Pontuação
 ### Elementos (pontos por posição em signo do elemento):
 - Sol, Lua, Ascendente, Meio do Céu: 3 pontos cada
@@ -126,7 +161,15 @@ Como esta pessoa deve se posicionar, ser vista e comunicar quem é — no trabal
 ### 27. Desafios — Crises, Excessos, Traumas e Feridas
 Com sagacidade e sem condescendência: onde estão as zonas de vulnerabilidade, padrões compulsivos, sombras recorrentes e feridas não integradas. Examine Saturno (estruturas rígidas e medos), Quíron (ferida primordial), Lilith (sombra e rejeição), aspectos de tensão (quadraturas, oposições) e elementos/modalidades em excesso ou falta. Nomear o desafio com precisão é o primeiro passo para dissolvê-lo.
 
----
+### 28. Mapa de Previsões — 12 Meses
+Para uma análise integrada que contenha mapa natal, Revolução Solar, Progressão Secundária e os trânsitos mensais calculados, crie um panorama em 12 blocos mensais. Integre o cenário anual da RS, a evolução interna progressada e os aspectos de trânsito fornecidos para cada mês. Não invente datas ou aspectos que não constem nos dados.
+
+Estrutura recomendada por mês:
+- Mês 1, Mês 2, etc. até Mês 12
+- Para cada mês, descreva: tema central do ciclo, área da vida mais ativa, principal aprendizado, movimento emocional, trânsitos que mais marcam o período, e relação com o mapa natal.
+- Mostre também: quais meses têm maior carga de transformação, quais são mais exigentes, quais abrem oportunidades de expansão e quais funcionam como meses de consolidação.
+- Não trate a previsão como mera cronologia aleatória: conecte os trânsitos calculados do mês à Revolução Solar e à Lua progressada. Se os mapas derivados ou snapshots mensais não estiverem nos dados, explique que não há dados suficientes para uma previsão mensal confiável e faça uma síntese prudente baseada apenas no mapa disponível.
+- Conclua com um resumo do ano em 2 a 3 parágrafos, estabelecendo os grandes eixos de desenvolvimento, os meses mais intensos e a direção geral do ciclo.
 
 ## Combo de Entrega (OBRIGATÓRIO para cada item analisado)
 Ao final de cada seção (planetas, pontos, aspectos), inclua:
@@ -208,6 +251,30 @@ interface BirthChart {
   northNode?: PlanetPosition;
   southNode?: PlanetPosition;
   aspects?: Array<{ planet1: string; planet2: string; type: string; orb?: number | null }>;
+  solarReturn?: {
+    date?: string;
+    sun?: string;
+    moon?: string;
+    ascendant?: string;
+    midheaven?: string;
+    house?: number;
+    natalAscendantHouse?: string;
+    natalMcHouse?: string;
+    rsAscendantHouse?: string;
+    rsMcHouse?: string;
+    planetHouses?: string[];
+    repeatedAspects?: string[];
+    notes?: string;
+  };
+  secondaryProgression?: {
+    date?: string;
+    sun?: string;
+    moon?: string;
+    ascendant?: string;
+    midheaven?: string;
+    keyPoints?: string[];
+    notes?: string;
+  };
 }
 
 export function buildChartPrompt(data: {
@@ -219,6 +286,12 @@ export function buildChartPrompt(data: {
   autoCalculate?: boolean | null;
   birthChart?: unknown;
   ephemerisCalculated?: boolean;
+  analysisType?: "natal" | "solar-return" | "secondary-progression" | "integrated";
+  monthlyTransits?: Array<{
+    date: string;
+    planets: Array<{ name: string; sign: string; degree: number; retrograde: boolean; natalHouse: number }>;
+    aspects: Array<{ transitPlanet: string; natalPlanet: string; type: string; orb: number }>;
+  }>;
 }): string {
   if (data.autoCalculate) {
     return `Por favor, realize a análise astrológica completa seguindo o método Assence para:
@@ -264,6 +337,42 @@ Com base nestes dados de nascimento, calcule as posições planetárias aproxima
   const tz = (data.birthChart as Record<string, unknown> | null)?.timezone as { name?: string; utcOffsetMin?: number } | undefined;
   const tzLine = tz?.name ? `Fuso Horário: ${tz.name} (UTC${tz.utcOffsetMin != null ? (tz.utcOffsetMin >= 0 ? "+" : "") + (tz.utcOffsetMin / 60).toFixed(0) : ""})` : "";
 
+  const chartData = data.birthChart as Record<string, unknown> | null;
+  const solarReturn = data.analysisType === "solar-return" || data.analysisType === "integrated"
+    ? chartData?.solarReturn as Record<string, unknown> | undefined
+    : undefined;
+  const secondaryProgression = data.analysisType === "secondary-progression" || data.analysisType === "integrated"
+    ? chartData?.secondaryProgression as Record<string, unknown> | undefined
+    : undefined;
+  const solarReturnLine = solarReturn
+    ? `
+MAPA DE REVOLUÇÃO SOLAR (ciclo anual atual, sempre integrado ao mapa natal):
+- Data do ciclo atual: ${solarReturn.date ?? "atual"}
+- Local do aniversário: ${solarReturn.location ?? "não informado"}
+- Mapa calculado: ${JSON.stringify(solarReturn)}
+- Ascendente da RS: ${solarReturn.ascendant ?? "não informado"}
+- MC da RS: ${solarReturn.midheaven ?? "não informado"}
+- Casa do mapa natal em que cai o Ascendente da RS: ${solarReturn.rsAscendantHouse ?? "verificar"}
+- Casa do mapa natal em que cai o MC da RS: ${solarReturn.rsMcHouse ?? "verificar"}
+- Casa da RS em que cai o Ascendente do mapa natal: ${solarReturn.natalAscendantHouse ?? "verificar"}
+- Casa da RS em que cai o MC do mapa natal: ${solarReturn.natalMcHouse ?? "verificar"}
+- Planetas da RS nas casas natais e aspectos repetidos: use somente as sobreposições efetivamente incluídas no mapa calculado acima.
+
+Na análise, trate esta revolução solar como uma leitura do ano atual em relação ao mapa natal, mostrando como o tema da vida está sendo convocado, pressionado e ampliado neste ciclo. Interprete todos os pontos da RS em conjunto: Ascendente, MC, inversos, planetas da RS nas casas do mapa natal, aspectos que se repetem entre o mapa natal e a RS, regentes dos signos envolvidos e todas as interconexões entre esses pontos. Isso indica onde o ano terá maior carga de ativação e exigência. Não interprete os pontos da RS isoladamente; veja toda a rede de pressões, regências e articulações como um sistema único. Também integre a leitura com trânsitos e progressões, sem tratar a RS como uma leitura isolada.`
+    : "";
+
+  const secondaryProgressionLine = secondaryProgression
+    ? `
+MAPA DE PROGRESSÃO SECUNDÁRIA (evolução interna em movimento, sempre integrada ao mapa natal):
+- Data da progressão: ${secondaryProgression.date ?? "não informada"}
+- Mapa progressado calculado: ${JSON.stringify(secondaryProgression)}
+- Lua progressada: ${JSON.stringify(secondaryProgression.moon ?? "não informada")}
+- Sol progressado: ${JSON.stringify(secondaryProgression.sun ?? "não informado")}
+- Ascendente e MC progressados: ${secondaryProgression.ascendant ?? "não informado"} / ${secondaryProgression.midheaven ?? "não informado"}
+
+Na análise, trate a Progressão Secundária como a expressão da evolução interna da pessoa em relação ao mapa natal, mostrando em que áreas da vida o amadurecimento, a maturidade e a mudança de postura são mais profundos. Dê prioridade à Lua progressada como indicador central da mudança emocional e do clima interno do período; em seguida, interprete o Sol, o Ascendente e o MC progressados em conjunto, observando como eles se conectam ao mapa natal e ao ciclo atual da RS, sem tratá-los como indicadores isolados. O valor da progressão está em sua rede de articulação com o mapa principal e com o ciclo anual.`
+    : "";
+
   return `Por favor, realize a análise astrológica completa seguindo o método Assence para:
 
 Nome: ${data.clientName}
@@ -276,6 +385,17 @@ ${data.clientAge != null ? `Idade: ${data.clientAge} anos` : ""}
 POSIÇÕES PLANETÁRIAS${data.ephemerisCalculated ? " (calculadas via efemérides astronômicas, sistema de casas Placidus tropical, hora local convertida para UT)" : ""}:
 ${planetLines.join("\n")}
 ${aspectLines}
+${solarReturnLine}
+${secondaryProgressionLine}
+${data.monthlyTransits?.length ? `TRÂNSITOS CALCULADOS PARA AS PREVISÕES MENSAIS:\n${JSON.stringify(data.monthlyTransits)}` : ""}
 
-Realize a análise completa conforme as diretrizes do método Assence, seguindo a estrutura obrigatória com análise da alma, Laboratório de Integração e Reflexão para cada posição. Não inclua afirmações, "Poder do Verbo", "Conselho de Ouro" ou seções equivalentes.`;
+Tipo de serviço solicitado: ${data.analysisType ?? "natal"}.
+Realize a análise completa conforme as diretrizes do método Assence, seguindo a estrutura obrigatória com análise da alma, Laboratório de Integração e Reflexão para cada posição. Nunca invente posições ausentes. ${data.analysisType === "integrated"
+    ? "Integre o mapa natal, a Revolução Solar, a Progressão Secundária e os trânsitos mensais calculados. Na seção 28, faça previsões para 12 meses utilizando somente os snapshots fornecidos, explicando tendências sem determinismo."
+    : data.analysisType === "solar-return"
+      ? "Interprete o mapa natal e a Revolução Solar calculada em conjunto. Não atribua conclusões de Progressão Secundária, pois não foi solicitada."
+      : data.analysisType === "secondary-progression"
+        ? "Interprete o mapa natal e a Progressão Secundária calculada em conjunto. Não atribua conclusões de Revolução Solar, pois não foi solicitada."
+        : "Analise somente o mapa natal fornecido e não fabrique informações de Revolução Solar ou Progressão Secundária."}
+Não inclua afirmações, "Poder do Verbo", "Conselho de Ouro" ou seções equivalentes.`;
 }

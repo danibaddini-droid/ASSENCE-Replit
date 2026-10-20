@@ -266,12 +266,16 @@ export default function Readings() {
                             <span className="hidden sm:inline truncate max-w-40">{reading.birthPlace}</span>
                           </>
                         )}
-                        {(reading.birthChart as Record<string, unknown>)?.sun && (
-                          <>
-                            <span className="hidden sm:inline">•</span>
-                            <span className="hidden sm:inline">Sol em {(reading.birthChart as Record<string, {sign:string}>).sun.sign}</span>
-                          </>
-                        )}
+                        {(() => {
+                          const birthChart = reading.birthChart as Record<string, { sign?: string } | undefined>;
+                          const sunSign = birthChart?.sun?.sign;
+                          return sunSign ? (
+                            <>
+                              <span className="hidden sm:inline">•</span>
+                              <span className="hidden sm:inline">Sol em {sunSign}</span>
+                            </>
+                          ) : null;
+                        })()}
                       </div>
                       {reading.notes && (
                         <p className="mt-1.5 text-xs text-muted-foreground/60 italic truncate max-w-md">

@@ -473,6 +473,13 @@ components:
         timezoneOverride:
           type: ["string", "null"]
           description: IANA timezone name (e.g. "UTC", "America/New_York"). If null, auto-detected from birth place coordinates.
+        analysisType:
+          type: string
+          enum: ["natal", "solar-return", "secondary-progression", "integrated"]
+          default: natal
+        solarReturnLocation:
+          type: ["string", "null"]
+          description: Location where the client will spend their birthday; required for solar-return and integrated analyses.
       required:
         - clientName
         - birthDate
